@@ -56,8 +56,12 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ onComplete }) => {
           transition={{ duration: 0.8, type: "spring" }}
           className="mb-8"
         >
-          <div className="text-6xl font-bold text-white mb-2">🎯</div>
-          <h1 className="text-4xl font-bold text-white mb-2">BetBingo</h1>
+          <img 
+            src="/logo.png" 
+            alt="BetBingo Logo" 
+            className="h-20 mx-auto mb-2"
+            style={{ maxWidth: '250px', height: 'auto' }}
+          />
           <p className="text-purple-200">1-on-1 Bingo. Real Bets. Real Wins.</p>
         </motion.div>
 

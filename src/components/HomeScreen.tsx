@@ -26,7 +26,12 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStartGame }) => {
       <div className="max-w-md mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">BetBingo</h1>
+          <img 
+            src="/logo.png" 
+            alt="BetBingo Logo" 
+            className="h-16 mx-auto mb-2"
+            style={{ maxWidth: '200px', height: 'auto' }}
+          />
           <p className="text-purple-200">1-on-1 Bingo. Real Bets. Real Wins.</p>
         </div>
 

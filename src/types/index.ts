@@ -6,46 +6,38 @@ export interface BingoCard {
 
 export interface Player {
   id: string;
-  name: string;
+  username: string;
+  email: string;
   avatar?: string;
-  balance: number;
-  cryptoBalance: { [key: string]: number };
   level: number;
   experience: number;
-  achievements: Achievement[];
-  badges: Badge[];
-  friends: string[];
-  isOnline: boolean;
-  lastSeen: Date;
-  totalGames: number;
-  totalWins: number;
+  balance: number;
+  bonus: number;
   totalEarnings: number;
-  bestStreak: number;
-  currentStreak: number;
+  gamesPlayed: number;
+  gamesWon: number;
+  achievements: string[];
+  badges: string[];
+  createdAt: string;
 }
 
 export interface Match {
   id: string;
-  player1: Player;
-  player2: Player;
-  betAmount: number;
-  currency: 'USD' | 'ETH' | 'USDC';
-  status: 'waiting' | 'active' | 'completed';
-  winner?: string;
-  currentNumber?: number;
-  calledNumbers: number[];
-  createdAt: Date;
-  duration?: number;
+  players: Player[];
+  entryFee: number;
+  prizePool: number;
+  status: 'waiting' | 'playing' | 'finished';
+  winner?: Player;
+  duration: number;
   tournamentId?: string;
-  isRanked: boolean;
-  eloChange?: number;
+  createdAt: string;
 }
 
 export interface GameState {
   currentMatch: Match | null;
-  playerCard: BingoCard | null;
-  opponentCard: BingoCard | null;
-  gameStatus: 'idle' | 'searching' | 'playing' | 'won' | 'lost';
+  playerCard: number[][] | null;
+  opponentCard: number[][] | null;
+  gameStatus: 'idle' | 'waiting' | 'playing' | 'won' | 'lost' | 'paused';
   calledNumbers: number[];
   currentNumber: number | null;
   gameTimer: number;
@@ -56,32 +48,29 @@ export interface Tournament {
   id: string;
   name: string;
   description: string;
-  startDate: Date;
-  endDate: Date;
   entryFee: number;
-  currency: 'USD' | 'ETH' | 'USDC';
   prizePool: number;
   maxPlayers: number;
   currentPlayers: number;
-  status: 'upcoming' | 'active' | 'completed';
+  status: 'upcoming' | 'active' | 'finished';
+  startDate: string;
+  endDate: string;
   rounds: TournamentRound[];
-  leaderboard: TournamentPlayer[];
 }
 
 export interface TournamentRound {
   id: string;
+  tournamentId: string;
   roundNumber: number;
-  matches: Match[];
-  startTime: Date;
-  endTime?: Date;
+  players: TournamentPlayer[];
+  winner?: TournamentPlayer;
+  status: 'waiting' | 'active' | 'finished';
 }
 
 export interface TournamentPlayer {
   playerId: string;
-  playerName: string;
+  username: string;
   score: number;
-  wins: number;
-  losses: number;
   rank: number;
 }
 
@@ -90,14 +79,10 @@ export interface Achievement {
   name: string;
   description: string;
   icon: string;
-  unlockedAt?: Date;
   progress: number;
   maxProgress: number;
-  reward: {
-    type: 'experience' | 'currency' | 'badge';
-    amount: number;
-    currency?: string;
-  };
+  completed: boolean;
+  reward: number;
 }
 
 export interface Badge {
@@ -106,50 +91,66 @@ export interface Badge {
   description: string;
   icon: string;
   rarity: 'common' | 'rare' | 'epic' | 'legendary';
-  unlockedAt?: Date;
+  unlocked: boolean;
+  unlockedAt?: string;
 }
 
 export interface ChatMessage {
   id: string;
-  senderId: string;
-  senderName: string;
+  matchId: string;
+  playerId: string;
+  username: string;
   message: string;
-  timestamp: Date;
-  type: 'text' | 'system' | 'emote';
+  timestamp: string;
 }
 
 export interface GameSettings {
   soundEnabled: boolean;
-  notifications: boolean;
-  autoMark: boolean;
-  theme: 'light' | 'dark' | 'auto';
-  language: string;
-  privacyMode: boolean;
-  chatEnabled: boolean;
-  animationsEnabled: boolean;
-  difficulty: 'easy' | 'medium' | 'hard';
+  musicEnabled: boolean;
+  notificationsEnabled: boolean;
+  autoCallNumbers: boolean;
+  theme: 'light' | 'dark' | 'system';
 }
 
 export interface LeaderboardEntry {
   rank: number;
   playerId: string;
-  playerName: string;
+  username: string;
   avatar?: string;
   score: number;
-  wins: number;
-  earnings: number;
-  level: number;
-  isOnline: boolean;
+  gamesWon: number;
+  totalEarnings: number;
 }
 
 export interface Notification {
   id: string;
-  type: 'match' | 'tournament' | 'achievement' | 'friend' | 'system';
+  userId: string;
   title: string;
   message: string;
-  timestamp: Date;
+  type: 'info' | 'success' | 'warning' | 'error';
   read: boolean;
-  actionUrl?: string;
+  createdAt: string;
+}
+
+export interface GameHistoryItem {
+  id: string;
+  opponent: string;
+  result: 'win' | 'loss';
+  betAmount: number;
+  currency: string;
+  date: string;
+  duration: number;
+}
+
+export interface Transaction {
+  id: string;
+  userId: string;
+  type: 'win' | 'withdrawal' | 'bonus' | 'entry_fee';
+  amount: number;
+  description: string;
+  status: 'pending' | 'completed' | 'failed';
+  createdAt: string;
+  paypalEmail?: string;
 }
 
 export type Currency = 'USD' | 'ETH' | 'USDC';

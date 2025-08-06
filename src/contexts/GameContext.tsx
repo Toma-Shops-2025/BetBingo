@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, useState, ReactNode } from 'react';
 import { GameState, Match, BingoCard, Player } from '@/types';
 import { generateBingoCard, checkWin } from '@/utils/bingoUtils';
 
@@ -23,7 +23,11 @@ const initialState: GameState = {
   currentMatch: null,
   playerCard: null,
   opponentCard: null,
-  gameStatus: 'idle'
+  gameStatus: 'idle',
+  calledNumbers: [],
+  currentNumber: null,
+  gameTimer: 0,
+  isPaused: false
 };
 
 const initialStats = {
@@ -89,8 +93,42 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     
     const mockMatch: Match = {
       id: Math.random().toString(36).substr(2, 9),
-      player1: { id: '1', name: 'You', balance: 1000, cryptoBalance: { ETH: 0.5, USDC: 100 } },
-      player2: { id: '2', name: 'Opponent', balance: 1000, cryptoBalance: { ETH: 0.3, USDC: 80 } },
+      player1: { 
+        id: '1', 
+        name: 'You', 
+        balance: 1000, 
+        cryptoBalance: { ETH: 0.5, USDC: 100 },
+        level: 1,
+        experience: 0,
+        achievements: [],
+        badges: [],
+        friends: [],
+        isOnline: true,
+        lastSeen: new Date(),
+        totalGames: 0,
+        totalWins: 0,
+        totalEarnings: 0,
+        bestStreak: 0,
+        currentStreak: 0
+      },
+      player2: { 
+        id: '2', 
+        name: 'Opponent', 
+        balance: 1000, 
+        cryptoBalance: { ETH: 0.3, USDC: 80 },
+        level: 1,
+        experience: 0,
+        achievements: [],
+        badges: [],
+        friends: [],
+        isOnline: true,
+        lastSeen: new Date(),
+        totalGames: 0,
+        totalWins: 0,
+        totalEarnings: 0,
+        bestStreak: 0,
+        currentStreak: 0
+      },
       betAmount,
       currency: currency as any,
       status: 'active',

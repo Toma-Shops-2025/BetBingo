@@ -26,6 +26,7 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   signInWithProvider: (provider: 'google' | 'github') => Promise<{ error: any }>;
   updateBalance: (amount: number) => Promise<void>;
+  updateUser: (updates: Partial<AuthUser>) => void;
   claimBonus: () => Promise<void>;
 }
 
@@ -266,6 +267,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const updateUser = (updates: Partial<AuthUser>) => {
+    setUser(prev => prev ? { ...prev, ...updates } : null);
+  };
+
   const claimBonus = async () => {
     if (isDemoMode) {
       // Demo mode - simulate claiming bonus
@@ -307,6 +312,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         signOut,
         signInWithProvider,
         updateBalance,
+        updateUser,
         claimBonus,
       }}
     >

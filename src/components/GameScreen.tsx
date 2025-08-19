@@ -3,7 +3,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Trophy, Clock, MessageCircle, Users, Crown, DollarSign, Sparkles } from 'lucide-react';
+import { 
+  Trophy, 
+  Clock, 
+  MessageCircle, 
+  Users, 
+  Crown, 
+  DollarSign, 
+  Sparkles, 
+  X,
+  Home,
+  Volume2,
+  VolumeX,
+  Pause,
+  Play
+} from 'lucide-react';
 import { useGame } from '@/contexts/GameContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { BingoCard as BingoCardType } from '@/types';
@@ -15,15 +29,22 @@ import AnimatedWinPatternsDisplay from './AnimatedWinPatternsDisplay';
 import AnimatedCurrentNumber from './AnimatedCurrentNumber';
 import AnimatedCalledNumbers from './AnimatedCalledNumbers';
 import AnimatedMoneyDisplay from './AnimatedMoneyDisplay';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
-const GameScreen: React.FC = () => {
-  const { gameState, dispatch } = useGame();
+interface GameScreenProps {
+  onExitGame: () => void;
+}
+
+const GameScreen: React.FC<GameScreenProps> = ({ onExitGame }) => {
+  const { gameState, dispatch, endMatch } = useGame();
   const { currentMatch, playerCard, opponentCard } = gameState;
   const { user } = useAuth();
   const [chatOpen, setChatOpen] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(30); // 30 seconds for BingoBlitz
+  const [timeLeft, setTimeLeft] = useState(30);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [gamePaused, setGamePaused] = useState(false);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [powerUps, setPowerUps] = useState({
     timeFreeze: 2,
     autoMark: 1,
@@ -35,261 +56,355 @@ const GameScreen: React.FC = () => {
   const [currentNumber, setCurrentNumber] = useState<number | null>(null);
   const [calledNumbers, setCalledNumbers] = useState<Array<{letter: string, number: number, timestamp: number}>>([]);
 
+  // Mock current game data
+  const currentGame = {
+    entryFee: currentMatch?.entryFee || 1.00,
+    prizePool: 425.75,
+    jackpot: 2150.25,
+    playersCount: 62,
+    maxPlayers: 80,
+    roomName: 'Quick Cash',
+    gameNumber: '#BG-4721',
+    pattern: 'Full House',
+    ballsLeft: 75 - calledNumbers.length
+  };
+
+  const exitGame = () => {
+    if (gameState.gameStatus === 'playing') {
+      setShowExitConfirm(true);
+    } else {
+      onExitGame();
+    }
+  };
+
+  const confirmExit = () => {
+    endMatch();
+    setShowExitConfirm(false);
+    onExitGame();
+  };
+
   const usePowerUp = (powerUpType: string) => {
     if (powerUps[powerUpType as keyof typeof powerUps] > 0) {
       setPowerUps(prev => ({
         ...prev,
         [powerUpType]: prev[powerUpType as keyof typeof powerUps] - 1
       }));
-      // Add power-up logic here
     }
   };
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Convert number[][] to BingoCard format
-  const convertToBingoCard = (numbers: number[][] | null, id: string): BingoCardType | null => {
-    if (!numbers) return null;
-    
+  const convertToBingoCard = (cardNumbers: number[][]): BingoCardType => {
     return {
-      id,
-      numbers: numbers.map(row => row.map(num => num)),
-      marked: Array(5).fill(null).map(() => Array(5).fill(false))
+      numbers: cardNumbers.map(row => 
+        row.map(num => num === 0 ? null : num)
+      ) as (number | null)[][],
+      marked: cardNumbers.map(row => 
+        row.map(() => false)
+      )
     };
   };
 
-  const playerBingoCard = convertToBingoCard(playerCard, 'player-card');
-  const opponentBingoCard = convertToBingoCard(opponentCard, 'opponent-card');
+  useEffect(() => {
+    if (gameState.gameStatus === 'won') {
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 5000);
+    }
+  }, [gameState.gameStatus]);
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      {/* Enhanced purple/blue gradient background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900" />
-      <div className="fixed inset-0 bg-gradient-to-tr from-pink-900/30 via-purple-800/20 to-blue-800/30" />
-      <div className="fixed inset-0 bg-gradient-to-bl from-indigo-900/40 via-purple-900/30 to-pink-900/20" />
-      
-      {/* Animated background particles */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        {[...Array(30)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-2 h-2 bg-gradient-to-r from-purple-400 to-blue-400 rounded-full opacity-30"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-            }}
-            animate={{
-              y: [0, -30, 0],
-              x: [0, Math.random() * 20 - 10, 0],
-              opacity: [0.3, 0.7, 0.3],
-              scale: [1, 1.5, 1]
-            }}
-            transition={{
-              duration: 4 + Math.random() * 3,
-              repeat: Infinity,
-              delay: Math.random() * 4
-            }}
-          />
-        ))}
-      </div>
+    <>
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 relative overflow-hidden">
+        {/* Animated background effects */}
+        <div className="absolute inset-0">
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 via-blue-600/10 to-purple-600/10 blur-3xl"></div>
+          <div className="absolute top-0 left-0 w-full h-full">
+            {/* Animated particles */}
+            {[...Array(20)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute w-2 h-2 bg-purple-400/30 rounded-full"
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  top: `${Math.random() * 100}%`,
+                }}
+                animate={{
+                  y: [0, -20, 0],
+                  opacity: [0.3, 1, 0.3],
+                  scale: [1, 1.2, 1]
+                }}
+                transition={{
+                  duration: 3 + Math.random() * 2,
+                  repeat: Infinity,
+                  delay: Math.random() * 2
+                }}
+              />
+            ))}
+          </div>
+        </div>
 
-      <div className="relative z-10 p-4">
-        {/* Header with enhanced purple/blue gradients */}
-        <motion.div
-          className="relative flex justify-between items-center mb-6 bg-gradient-to-r from-purple-800/40 via-blue-800/40 to-purple-800/40 backdrop-blur-xl rounded-2xl border border-purple-400/30 p-4 shadow-2xl"
-          initial={{ opacity: 0, y: -30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          style={{
-            boxShadow: '0 0 40px rgba(147, 51, 234, 0.3), 0 20px 40px rgba(0, 0, 0, 0.3)'
-          }}
-        >
-          {/* Pulsing border effect */}
+        <div className="relative z-10 p-4 space-y-4">
+          {/* Top Game Info Bar */}
           <motion.div
-            className="absolute inset-0 rounded-2xl border border-purple-400/50"
-            animate={{
-              borderColor: [
-                'rgba(147, 51, 234, 0.5)',
-                'rgba(59, 130, 246, 0.8)',
-                'rgba(147, 51, 234, 0.5)'
-              ]
-            }}
-            transition={{
-              duration: 3,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-          />
-          
-          <div className="flex items-center gap-4 relative z-10">
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-r from-purple-900/60 via-blue-900/60 to-purple-900/60 backdrop-blur-xl border border-purple-400/30 rounded-2xl p-4 shadow-2xl"
+          >
+            <div className="flex items-center justify-between">
+              {/* Left: Game Info */}
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={exitGame}
+                  className="p-2 bg-red-500/20 border border-red-400/30 rounded-lg text-red-400 hover:bg-red-500/30 transition-all"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+                
+                <div>
+                  <h2 className="text-white font-black text-lg">{currentGame.roomName}</h2>
+                  <p className="text-purple-300 text-sm">{currentGame.gameNumber}</p>
+                </div>
+
+                <div className="hidden sm:flex items-center space-x-4 text-sm">
+                  <div className="bg-green-500/20 border border-green-400/30 rounded-lg px-3 py-1">
+                    <span className="text-green-300 font-bold">${currentGame.prizePool.toFixed(2)}</span>
+                    <p className="text-green-400 text-xs">Prize Pool</p>
+                  </div>
+                  
+                  <div className="bg-yellow-500/20 border border-yellow-400/30 rounded-lg px-3 py-1">
+                    <span className="text-yellow-300 font-bold">${currentGame.jackpot.toFixed(2)}</span>
+                    <p className="text-yellow-400 text-xs">Jackpot</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right: Controls */}
+              <div className="flex items-center space-x-3">
+                {/* Player Count */}
+                <div className="bg-blue-500/20 border border-blue-400/30 rounded-lg px-3 py-1 text-center">
+                  <div className="text-blue-300 font-bold">{currentGame.playersCount}/{currentGame.maxPlayers}</div>
+                  <p className="text-blue-400 text-xs">Players</p>
+                </div>
+
+                {/* Sound Toggle */}
+                <button
+                  onClick={() => setSoundEnabled(!soundEnabled)}
+                  className={`p-2 rounded-lg transition-all ${
+                    soundEnabled 
+                      ? 'bg-green-500/20 border border-green-400/30 text-green-400' 
+                      : 'bg-red-500/20 border border-red-400/30 text-red-400'
+                  }`}
+                >
+                  {soundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+                </button>
+
+                {/* Chat Toggle */}
+                <button
+                  onClick={() => setChatOpen(!chatOpen)}
+                  className="p-2 bg-purple-500/20 border border-purple-400/30 rounded-lg text-purple-400 hover:bg-purple-500/30 transition-all relative"
+                >
+                  <MessageCircle className="w-5 h-5" />
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
+                </button>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Game Status Bar */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-gradient-to-r from-orange-500/20 to-red-500/20 border-2 border-orange-400/40 rounded-2xl p-4 backdrop-blur-md"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="bg-orange-500/30 rounded-xl p-3">
+                  <Trophy className="w-6 h-6 text-orange-400" />
+                </div>
+                <div>
+                  <h3 className="text-orange-300 font-bold text-lg">Win Pattern: {currentGame.pattern}</h3>
+                  <p className="text-orange-400 text-sm">Get a full house to win the round!</p>
+                </div>
+              </div>
+              
+              <div className="text-right">
+                <div className="text-orange-300 text-2xl font-black">
+                  {currentGame.ballsLeft}
+                </div>
+                <p className="text-orange-400 text-sm">Balls Left</p>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Current Number Display */}
+          <AnimatedCurrentNumber number={currentNumber} />
+
+          {/* Main Game Area */}
+          <div className="grid lg:grid-cols-2 gap-4">
+            {/* Your Card */}
             <motion.div
-              className="bg-gradient-to-br from-purple-600/30 via-purple-500/40 to-blue-600/30 backdrop-blur-md rounded-xl p-4 border border-purple-400/40 shadow-xl"
-              whileHover={{ scale: 1.05, rotate: [0, 2, -2, 0] }}
-              transition={{ duration: 0.3 }}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+              className="space-y-4"
             >
-              <div className="flex items-center gap-3">
-                <Clock className="w-6 h-6 text-purple-300" />
-                <span className="text-white font-bold text-xl">
-                  {formatTime(timeLeft)}
-                </span>
+              <div className="bg-gradient-to-r from-green-600/30 to-emerald-600/30 border-2 border-green-400/40 rounded-2xl p-4 backdrop-blur-md">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="bg-green-500/30 rounded-xl p-2">
+                      <Crown className="w-5 h-5 text-green-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-green-300 font-bold text-lg">Your Card</h3>
+                      <p className="text-green-400 text-sm">Entry: ${currentGame.entryFee.toFixed(2)}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-green-300 text-xl font-black">
+                      {user.gamesWon}
+                    </div>
+                    <p className="text-green-400 text-xs">Wins</p>
+                  </div>
+                </div>
+
+                {playerCard ? (
+                  <AnimatedBingoCard 
+                    card={convertToBingoCard(playerCard)} 
+                    calledNumbers={calledNumbers.map(cn => cn.number)}
+                    hasWin={gameState.gameStatus === 'won'}
+                  />
+                ) : (
+                  <div className="bg-green-500/10 border border-green-400/20 rounded-xl p-8 text-center">
+                    <p className="text-green-400">Loading your card...</p>
+                  </div>
+                )}
               </div>
             </motion.div>
 
+            {/* Opponent Card */}
             <motion.div
-              className="bg-gradient-to-br from-blue-600/30 via-cyan-500/40 to-purple-600/30 backdrop-blur-md rounded-xl p-4 border border-blue-400/40 shadow-xl"
-              whileHover={{ scale: 1.05, rotate: [0, -2, 2, 0] }}
-              transition={{ duration: 0.3 }}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4 }}
+              className="space-y-4"
             >
-              <div className="flex items-center gap-3">
-                <Trophy className="w-6 h-6 text-yellow-400" />
-                <span className="text-white font-bold text-xl">
-                  $50
-                </span>
+              <div className="bg-gradient-to-r from-red-600/30 to-pink-600/30 border-2 border-red-400/40 rounded-2xl p-4 backdrop-blur-md">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="bg-red-500/30 rounded-xl p-2">
+                      <Users className="w-5 h-5 text-red-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-red-300 font-bold text-lg">Top Player</h3>
+                      <p className="text-red-400 text-sm">Leading the game</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-red-300 text-xl font-black">
+                      1st
+                    </div>
+                    <p className="text-red-400 text-xs">Position</p>
+                  </div>
+                </div>
+
+                {opponentCard ? (
+                  <AnimatedBingoCard 
+                    card={convertToBingoCard(opponentCard)} 
+                    calledNumbers={calledNumbers.map(cn => cn.number)}
+                    hasWin={false}
+                  />
+                ) : (
+                  <div className="bg-red-500/10 border border-red-400/20 rounded-xl p-8 text-center">
+                    <p className="text-red-400">Loading opponent card...</p>
+                  </div>
+                )}
               </div>
             </motion.div>
           </div>
 
-          <motion.div
-            className="flex items-center gap-2 relative z-10"
-            whileHover={{ scale: 1.05 }}
-          >
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setChatOpen(!chatOpen)}
-              className="bg-gradient-to-r from-purple-600/20 to-blue-600/20 border-purple-400/30 text-white hover:from-purple-600/40 hover:to-blue-600/40 backdrop-blur-md"
-            >
-              <MessageCircle className="w-4 h-4 mr-2" />
-              Chat
-            </Button>
-          </motion.div>
-        </motion.div>
+          {/* Called Numbers */}
+          <AnimatedCalledNumbers numbers={calledNumbers} />
 
-        {/* Power-ups Bar */}
-        <AnimatedPowerUpsBar powerUps={powerUps} onUsePowerUp={usePowerUp} />
+          {/* Power-ups */}
+          <AnimatedPowerUpsBar 
+            powerUps={powerUps}
+            onUsePowerUp={usePowerUp}
+            gameActive={gameState.gameStatus === 'playing'}
+          />
 
-        {/* Win Patterns Display */}
-        <AnimatedWinPatternsDisplay />
-
-        {/* Called Numbers Display */}
-        <AnimatedCalledNumbers calledNumbers={calledNumbers} />
-
-        {/* Current Number Display */}
-        {currentNumber && (
-          <AnimatedCurrentNumber number={currentNumber} />
-        )}
-
-        {/* Game Cards with enhanced backgrounds */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          {/* Player Card */}
-          <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            <Card className="relative bg-gradient-to-br from-purple-700/20 via-blue-600/20 to-purple-700/20 backdrop-blur-xl border-2 border-purple-400/30 shadow-2xl overflow-hidden">
-              {/* Enhanced glow effect */}
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 via-blue-600/10 to-purple-600/10 rounded-xl blur-xl" />
-              
-              <CardHeader className="relative z-10">
-                <CardTitle className="text-white text-center text-xl font-bold bg-gradient-to-r from-purple-300 to-blue-300 bg-clip-text text-transparent">
-                  YOUR CARD
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="relative z-10">
-                {playerBingoCard ? (
-                  <AnimatedBingoCard 
-                    card={playerBingoCard}
-                    onNumberClick={(number) => {
-                      // Add number marking logic
-                    }}
-                  />
-                ) : (
-                  <div className="text-center text-white/60 py-8">
-                    <p>No card available</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          {/* Opponent Card */}
-          <motion.div
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-          >
-            <Card className="relative bg-gradient-to-bl from-blue-700/20 via-purple-600/20 to-blue-700/20 backdrop-blur-xl border-2 border-blue-400/30 shadow-2xl overflow-hidden">
-              {/* Enhanced glow effect */}
-              <div className="absolute inset-0 bg-gradient-to-bl from-blue-600/10 via-purple-600/10 to-blue-600/10 rounded-xl blur-xl" />
-              
-              <CardHeader className="relative z-10">
-                <CardTitle className="text-white text-center text-xl font-bold bg-gradient-to-r from-blue-300 to-purple-300 bg-clip-text text-transparent">
-                  OPPONENT CARD
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="relative z-10">
-                {opponentBingoCard ? (
-                  <AnimatedBingoCard 
-                    card={opponentBingoCard}
-                    disabled={true}
-                  />
-                ) : (
-                  <div className="text-center text-white/60 py-8">
-                    <p>No opponent card available</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </motion.div>
+          {/* Balance Display */}
+          <AnimatedMoneyDisplay balance={user.balance} />
         </div>
 
-        {/* Enhanced Money Display */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.6 }}
-          className="mb-6"
-        >
-          <AnimatedMoneyDisplay amount={user?.balance || 0} title="Current Winnings" />
-        </motion.div>
+        {/* Chat System */}
+        <AnimatePresence>
+          {chatOpen && (
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              className="fixed top-0 right-0 w-80 h-full bg-purple-900/95 backdrop-blur-xl border-l border-purple-400/30 z-50"
+            >
+              <ChatSystem onClose={() => setChatOpen(false)} />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        {/* Game Actions with purple/blue gradients */}
-        <motion.div
-          className="flex justify-center gap-4 bg-gradient-to-r from-purple-800/30 via-blue-800/30 to-purple-800/30 backdrop-blur-xl rounded-2xl border border-purple-400/20 p-6"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.8 }}
-        >
-          <Button
-            size="lg"
-            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold px-8 py-4 shadow-lg hover:shadow-purple-500/25"
-          >
-            <DollarSign className="w-5 h-5 mr-2" />
-            Cash Out
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="lg"
-            className="border-purple-400/50 text-purple-300 hover:bg-purple-600/20 hover:border-purple-400 px-8 py-4"
-          >
-            <Sparkles className="w-5 h-5 mr-2" />
-            Use Power-Up
-          </Button>
-        </motion.div>
+        {/* Confetti */}
+        {showConfetti && <AnimatedConfetti />}
       </div>
 
-      {/* Chat System */}
-      <ChatSystem isOpen={chatOpen} onClose={() => setChatOpen(false)} />
-
-      {/* Confetti */}
-      {showConfetti && <AnimatedConfetti />}
-    </div>
+      {/* Exit Confirmation Modal */}
+      <AnimatePresence>
+        {showExitConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              className="bg-gradient-to-br from-purple-800/90 via-blue-800/90 to-purple-800/90 backdrop-blur-xl border border-purple-400/30 rounded-2xl p-6 max-w-md w-full"
+            >
+              <div className="text-center">
+                <div className="bg-red-500/20 rounded-full p-4 w-16 h-16 mx-auto mb-4">
+                  <X className="w-8 h-8 text-red-400 mx-auto" />
+                </div>
+                
+                <h3 className="text-white text-xl font-bold mb-2">Exit Game?</h3>
+                <p className="text-purple-300 mb-6">
+                  You're currently in a live game. Exiting will forfeit your entry fee of ${currentGame.entryFee.toFixed(2)}.
+                </p>
+                
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => setShowExitConfirm(false)}
+                    className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-3 px-4 rounded-xl transition-all"
+                  >
+                    Stay & Play
+                  </button>
+                  <button
+                    onClick={confirmExit}
+                    className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold py-3 px-4 rounded-xl transition-all"
+                  >
+                    Exit Game
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 };
 

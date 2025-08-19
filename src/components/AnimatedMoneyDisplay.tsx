@@ -16,12 +16,13 @@ const AnimatedMoneyDisplay: React.FC<AnimatedMoneyDisplayProps> = ({
   size = 'medium'
 }) => {
   const formatAmount = (value: number) => {
-    if (value >= 1000000) {
-      return `${(value / 1000000).toFixed(1)}M`;
-    } else if (value >= 1000) {
-      return `${(value / 1000).toFixed(1)}K`;
+    const safeValue = value || 0;
+    if (safeValue >= 1000000) {
+      return `${(safeValue / 1000000).toFixed(1)}M`;
+    } else if (safeValue >= 1000) {
+      return `${(safeValue / 1000).toFixed(1)}K`;
     }
-    return value.toLocaleString();
+    return safeValue.toLocaleString();
   };
 
   const sizeClasses = {

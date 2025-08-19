@@ -155,7 +155,7 @@ const TournamentScreen: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-white">{tournament.name}</CardTitle>
                   <Badge className={getTournamentStatusColor(tournament.status)}>
-                    {tournament.status.charAt(0).toUpperCase() + tournament.status.slice(1)}
+                    {(tournament.status || '').charAt(0).toUpperCase() + (tournament.status || '').slice(1)}
                   </Badge>
                 </div>
               </CardHeader>

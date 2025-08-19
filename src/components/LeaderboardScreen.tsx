@@ -106,7 +106,7 @@ const LeaderboardScreen: React.FC = () => {
             <Trophy className="w-8 h-8 text-yellow-400" />
           </div>
           <div className="text-green-300 text-4xl font-black mb-2">
-            ${getCurrentRankings()[0]?.winnings.toLocaleString() || '0'}
+            ${(getCurrentRankings()[0]?.winnings || 0).toLocaleString()}
           </div>
           <p className="text-green-400 text-lg">Top prize for {activeTab} rankings</p>
         </div>
@@ -147,7 +147,7 @@ const LeaderboardScreen: React.FC = () => {
         transition={{ delay: 0.4 }}
         className="grid grid-cols-3 gap-4 mb-6"
       >
-        {getCurrentRankings().slice(0, 3).map((player, index) => {
+        {(getCurrentRankings() || []).slice(0, 3).map((player, index) => {
           const rankInfo = getRankIcon(player.rank);
           const Icon = rankInfo.icon;
           const vipLevel = getVipLevel(player.level);
@@ -227,7 +227,7 @@ const LeaderboardScreen: React.FC = () => {
             transition={{ duration: 0.3 }}
             className="space-y-2"
           >
-            {getCurrentRankings().slice(3).map((player, index) => {
+            {(getCurrentRankings() || []).slice(3).map((player, index) => {
               const vipLevel = getVipLevel(player.level);
               const isCurrentUser = player.username === user?.username;
 

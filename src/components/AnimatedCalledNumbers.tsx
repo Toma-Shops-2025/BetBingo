@@ -17,7 +17,7 @@ const AnimatedCalledNumbers: React.FC<AnimatedCalledNumbersProps> = ({
   calledNumbers, 
   maxDisplay = 10 
 }) => {
-  const recentNumbers = calledNumbers.slice(-maxDisplay);
+  const recentNumbers = (calledNumbers || []).slice(-maxDisplay);
 
   return (
     <motion.div

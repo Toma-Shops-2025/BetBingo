@@ -15,7 +15,7 @@ const ThemeContext = createContext<ThemeContextType | null>(null)
 
 export function ThemeProvider({
   children,
-  defaultTheme = "system",
+  defaultTheme = "dark", // Changed from "system" to "dark"
   value: _value,
   ...props
 }: ThemeProviderProps) {
@@ -43,13 +43,20 @@ export function ThemeProvider({
     }
 
     root.classList.add(theme)
+    
+    // Apply dark theme immediately to body for instant visual feedback
+    if (theme === "dark") {
+      document.body.classList.add("dark-theme")
+    } else {
+      document.body.classList.remove("dark-theme")
+    }
   }, [theme])
 
   const value: ThemeContextType = {
     theme,
-    setTheme: (theme: Theme) => {
-      localStorage.setItem("theme", theme)
-      setTheme(theme)
+    setTheme: (newTheme: Theme) => {
+      localStorage.setItem("theme", newTheme)
+      setTheme(newTheme)
     },
   }
 

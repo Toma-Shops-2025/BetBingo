@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAuth } from '@/contexts/AuthContext'
-import { Loader2, Github } from 'lucide-react'
+import { Loader2, Github, Sparkles } from 'lucide-react'
 
 interface AuthModalProps {
   isOpen: boolean
@@ -15,6 +15,7 @@ interface AuthModalProps {
 const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [username, setUsername] = useState('')
   const [loading, setLoading] = useState(false)
   const { signIn, signUp, signInWithProvider } = useAuth()
 
@@ -35,7 +36,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     e.preventDefault()
     setLoading(true)
     try {
-      await signUp(email, password)
+      await signUp(email, password, username)
       onClose()
     } catch (error) {
       // Error handled in context
@@ -58,85 +59,111 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Sign in to your account</DialogTitle>
+      <DialogContent className="sm:max-w-md bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 border-purple-500/30">
+        <DialogHeader className="text-center">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <Sparkles className="w-6 h-6 text-yellow-400" />
+            <DialogTitle className="text-2xl font-bold text-white">BingoBlitz</DialogTitle>
+            <Sparkles className="w-6 h-6 text-yellow-400" />
+          </div>
+          <p className="text-purple-200 text-sm">⚡ Where speed meets strategy!</p>
         </DialogHeader>
         <Tabs defaultValue="signin" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="signin">Sign In</TabsTrigger>
-            <TabsTrigger value="signup">Sign Up</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 bg-white/10 backdrop-blur-md border-white/20">
+            <TabsTrigger value="signin" className="text-white data-[state=active]:bg-purple-600">Sign In</TabsTrigger>
+            <TabsTrigger value="signup" className="text-white data-[state=active]:bg-purple-600">Sign Up</TabsTrigger>
           </TabsList>
-          <TabsContent value="signin">
+          <TabsContent value="signin" className="space-y-4 mt-6">
             <form onSubmit={handleSignIn} className="space-y-4">
               <div>
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email" className="text-white">Email</Label>
                 <Input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  className="bg-white/10 border-white/20 text-white placeholder:text-purple-300"
+                  placeholder="Enter your email"
                 />
               </div>
               <div>
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password" className="text-white">Password</Label>
                 <Input
                   id="password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  className="bg-white/10 border-white/20 text-white placeholder:text-purple-300"
+                  placeholder="Enter your password"
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button type="submit" className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3" disabled={loading}>
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Sign In
               </Button>
             </form>
           </TabsContent>
-          <TabsContent value="signup">
+          <TabsContent value="signup" className="space-y-4 mt-6">
             <form onSubmit={handleSignUp} className="space-y-4">
               <div>
-                <Label htmlFor="signup-email">Email</Label>
+                <Label htmlFor="signup-username" className="text-white">Username</Label>
+                <Input
+                  id="signup-username"
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                  className="bg-white/10 border-white/20 text-white placeholder:text-purple-300"
+                  placeholder="Choose a username"
+                />
+              </div>
+              <div>
+                <Label htmlFor="signup-email" className="text-white">Email</Label>
                 <Input
                   id="signup-email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  className="bg-white/10 border-white/20 text-white placeholder:text-purple-300"
+                  placeholder="Enter your email"
                 />
               </div>
               <div>
-                <Label htmlFor="signup-password">Password</Label>
+                <Label htmlFor="signup-password" className="text-white">Password</Label>
                 <Input
                   id="signup-password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  className="bg-white/10 border-white/20 text-white placeholder:text-purple-300"
+                  placeholder="Choose a password"
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button type="submit" className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-3" disabled={loading}>
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Sign Up
               </Button>
             </form>
           </TabsContent>
         </Tabs>
-        <div className="relative">
+        <div className="relative mt-6">
           <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t" />
+            <span className="w-full border-t border-white/20" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+            <span className="bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 px-2 text-purple-300">Or continue with</span>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2 mt-4">
           <Button
             variant="outline"
             onClick={() => handleProviderSignIn('google')}
             disabled={loading}
+            className="bg-white/10 border-white/20 text-white hover:bg-white/20"
           >
             <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
               <path
@@ -162,10 +189,16 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             variant="outline"
             onClick={() => handleProviderSignIn('github')}
             disabled={loading}
+            className="bg-white/10 border-white/20 text-white hover:bg-white/20"
           >
             <Github className="mr-2 h-4 w-4" />
             GitHub
           </Button>
+        </div>
+        <div className="mt-4 text-center">
+          <p className="text-purple-300 text-xs">
+            By signing up, you agree to our Terms of Service and Privacy Policy
+          </p>
         </div>
       </DialogContent>
     </Dialog>

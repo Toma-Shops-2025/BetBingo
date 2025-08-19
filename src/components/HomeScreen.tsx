@@ -1,10 +1,16 @@
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Trophy, DollarSign, Gift, Zap, Star, Users, Target } from 'lucide-react';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Trophy, Zap, Star, Users, Target, Clock, Sparkles, Crown, Gift, TrendingUp, Award, Heart, DollarSign } from 'lucide-react';
 import { useGame } from '@/contexts/GameContext';
 import { useAuth } from '@/contexts/AuthContext';
+import AnimatedLogo from './AnimatedLogo';
+import AnimatedGameCard from './AnimatedGameCard';
+import AnimatedStats from './AnimatedStats';
+import AnimatedBackground from './AnimatedBackground';
+import AnimatedMoneyDisplay from './AnimatedMoneyDisplay';
+import AnimatedLeaderboard from './AnimatedLeaderboard';
+import AnimatedCashOutModal from './AnimatedCashOutModal';
+import { Button } from './ui/button';
 
 interface HomeScreenProps {
   onStartGame: (isPractice: boolean) => void;
@@ -13,195 +19,334 @@ interface HomeScreenProps {
 const HomeScreen: React.FC<HomeScreenProps> = ({ onStartGame }) => {
   const { user } = useAuth();
   const { gameStats } = useGame();
+  const [showCashOutModal, setShowCashOutModal] = useState(false);
 
   const handleStartMatch = (isPractice: boolean) => {
     onStartGame(isPractice);
   };
 
+  const stats = [
+    {
+      value: gameStats.totalWins,
+      label: 'Wins',
+      icon: Trophy,
+      color: 'text-yellow-400',
+      gradient: 'from-yellow-500/20 to-orange-500/20'
+    },
+    {
+      value: gameStats.currentStreak || 0,
+      label: 'Streak',
+      icon: TrendingUp,
+      color: 'text-green-400',
+      gradient: 'from-green-500/20 to-emerald-500/20'
+    },
+    {
+      value: gameStats.gamesPlayed,
+      label: 'Games',
+      icon: Award,
+      color: 'text-blue-400',
+      gradient: 'from-blue-500/20 to-cyan-500/20'
+    }
+  ];
+
+  const gameModes = [
+    {
+      title: 'Quick Play',
+      description: 'Fast-paced 30-second rounds with power-ups and multiple win patterns. Perfect for quick gaming sessions!',
+      icon: Zap,
+      badgeText: '30s Rounds',
+      badgeColor: 'bg-blue-500',
+      gradientFrom: 'from-blue-500/20',
+      gradientTo: 'to-cyan-500/20',
+      features: [
+        { icon: Users, text: '1-8 Players' },
+        { icon: Clock, text: '30s Rounds' },
+        { icon: Sparkles, text: 'Power-ups' }
+      ],
+      buttonText: 'Start Quick Play',
+      buttonColor: 'bg-blue-600 hover:bg-blue-700',
+      onClick: () => handleStartMatch(false)
+    },
+    {
+      title: 'Tournament Mode',
+      description: 'Compete in tournaments with friends and global players. Win prizes and climb the leaderboards!',
+      icon: Crown,
+      badgeText: 'Live Now',
+      badgeColor: 'bg-purple-500',
+      gradientFrom: 'from-purple-500/20',
+      gradientTo: 'to-pink-500/20',
+      features: [
+        { icon: Users, text: '16 Players' },
+        { icon: Trophy, text: '$50 Prize Pool' },
+        { icon: Clock, text: '2h Left' }
+      ],
+      buttonText: 'Join Tournament',
+      buttonColor: 'bg-purple-600 hover:bg-purple-700',
+      onClick: () => handleStartMatch(false)
+    },
+    {
+      title: 'Practice Mode',
+      description: 'Practice against AI opponents. Learn strategies, test power-ups, and improve your skills!',
+      icon: Target,
+      badgeText: 'Free',
+      badgeColor: 'bg-green-500',
+      gradientFrom: 'from-green-500/20',
+      gradientTo: 'to-emerald-500/20',
+      features: [
+        { icon: Users, text: 'vs AI' },
+        { icon: Clock, text: '30s Rounds' },
+        { icon: Sparkles, text: 'All Power-ups' }
+      ],
+      buttonText: 'Start Practice',
+      buttonColor: 'bg-green-600 hover:bg-green-700',
+      onClick: () => handleStartMatch(true)
+    }
+  ];
+
+  const leaderboardPlayers = [
+    { id: '1', name: 'Angela', score: 1608, prize: 998, position: 1 },
+    { id: '2', name: 'Brown', score: 1020, prize: 688, position: 2 },
+    { id: '3', name: 'Joanne', score: 620, prize: 369, position: 3 },
+    { id: '4', name: 'Mike', score: 450, prize: 250, position: 4 },
+    { id: '5', name: 'Sarah', score: 320, prize: 180, position: 5 }
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-4">
-      {/* Header with Logo and Balance */}
-      <div className="text-center mb-6">
-        <img
-          src="/logo.png"
-          alt="BetBingo Logo"
-          className="h-16 mx-auto mb-4"
-          style={{ maxWidth: '200px', height: 'auto' }}
-        />
-        <div className="flex justify-center items-center gap-4 mb-4">
-          <div className="bg-yellow-500/20 backdrop-blur-md rounded-lg p-3 border border-yellow-400/30">
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Animated Background */}
+      <AnimatedBackground />
+      
+      {/* Main Content */}
+      <div className="relative z-10 p-4">
+        {/* Header with Animated Logo */}
+        <motion.div 
+          className="text-center mb-8"
+          initial={{ opacity: 0, y: -50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+        >
+          <AnimatedLogo />
+        </motion.div>
+
+        {/* Money Display */}
+        <motion.div 
+          className="mb-8"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.3 }}
+        >
+          <AnimatedMoneyDisplay 
+            amount={user?.balance || 0} 
+            title="Your Balance"
+            size="large"
+          />
+        </motion.div>
+
+        {/* User Stats */}
+        <motion.div 
+          className="flex justify-center items-center gap-4 mb-8"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.4 }}
+        >
+          <motion.div 
+            className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 backdrop-blur-md rounded-lg p-3 border border-yellow-400/30 shadow-xl"
+            whileHover={{ scale: 1.05 }}
+            transition={{ type: "spring", stiffness: 300 }}
+          >
             <div className="flex items-center gap-2">
-              <DollarSign className="w-5 h-5 text-yellow-400" />
+              <Star className="w-5 h-5 text-yellow-400" />
               <span className="text-yellow-400 font-bold text-lg">
-                ${user?.balance || 0.00}
+                {user?.level || 1}
               </span>
             </div>
-            <p className="text-yellow-300 text-xs">Available Balance</p>
-          </div>
-          <div className="bg-green-500/20 backdrop-blur-md rounded-lg p-3 border border-green-400/30">
+            <p className="text-yellow-300 text-xs">Level</p>
+          </motion.div>
+
+          <motion.div 
+            className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 backdrop-blur-md rounded-lg p-3 border border-green-400/30 shadow-xl"
+            whileHover={{ scale: 1.05 }}
+            transition={{ type: "spring", stiffness: 300 }}
+          >
             <div className="flex items-center gap-2">
-              <Gift className="w-5 h-5 text-green-400" />
+              <Zap className="w-5 h-5 text-green-400" />
               <span className="text-green-400 font-bold text-lg">
-                ${user?.bonus || 5.00}
+                {user?.powerUps || 3}
               </span>
             </div>
-            <p className="text-green-300 text-xs">Welcome Bonus</p>
-          </div>
-        </div>
-      </div>
+            <p className="text-green-300 text-xs">Power-ups</p>
+          </motion.div>
 
-      {/* Welcome Message */}
-      <Card className="bg-white/10 backdrop-blur-md border-white/20 mb-6">
-        <CardHeader className="text-center">
-          <CardTitle className="text-white text-xl">
-            🎯 Win Real Cash Playing Bingo!
-          </CardTitle>
-          <p className="text-purple-200 text-sm">
-            Play skill-based bingo rounds and earn real money rewards
-          </p>
-        </CardHeader>
-      </Card>
+          <motion.div 
+            className="bg-gradient-to-r from-blue-500/20 to-cyan-500/20 backdrop-blur-md rounded-lg p-3 border border-blue-400/30 shadow-xl"
+            whileHover={{ scale: 1.05 }}
+            transition={{ type: "spring", stiffness: 300 }}
+          >
+            <div className="flex items-center gap-2">
+              <Trophy className="w-5 h-5 text-blue-400" />
+              <span className="text-blue-400 font-bold text-lg">
+                {user?.achievements || 0}
+              </span>
+            </div>
+            <p className="text-blue-300 text-xs">Achievements</p>
+          </motion.div>
+        </motion.div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-3 gap-3 mb-6">
-        <div className="bg-white/10 backdrop-blur-md rounded-lg p-3 text-center border border-white/20">
-          <div className="text-white font-bold text-lg">{gameStats.totalWins}</div>
-          <div className="text-purple-200 text-xs">Wins</div>
-        </div>
-        <div className="bg-white/10 backdrop-blur-md rounded-lg p-3 text-center border border-white/20">
-          <div className="text-white font-bold text-lg">${gameStats.totalEarnings?.toFixed(2) || '0.00'}</div>
-          <div className="text-purple-200 text-xs">Earned</div>
-        </div>
-        <div className="bg-white/10 backdrop-blur-md rounded-lg p-3 text-center border border-white/20">
-          <div className="text-white font-bold text-lg">{gameStats.gamesPlayed}</div>
-          <div className="text-purple-200 text-xs">Games</div>
-        </div>
-      </div>
+        {/* Quick Stats */}
+        <motion.div 
+          className="mb-8"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.5 }}
+        >
+          <AnimatedStats stats={stats} delay={0.6} />
+        </motion.div>
 
-      {/* Game Modes */}
-      <div className="space-y-4 mb-6">
-        {/* Cash Game Mode */}
-        <Card className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 backdrop-blur-md border-green-400/30">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <DollarSign className="w-5 h-5 text-green-400" />
-                Cash Bingo
-              </div>
-              <Badge variant="secondary" className="bg-green-500 text-white">
-                $0.50 Entry
-              </Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-green-200 text-sm mb-4">
-              Play against AI opponents and win real cash prizes. Fast-paced, skill-based bingo rounds.
-            </p>
-            <div className="flex items-center justify-between mb-4">
-              <div className="text-green-300 text-sm">
-                <div>🏆 Prize Pool: $2.00</div>
-                <div>⏱️ Duration: 3-5 min</div>
-              </div>
-              <div className="text-right">
-                <div className="text-green-300 text-sm">Players Online</div>
-                <div className="text-green-400 font-bold">1,247</div>
-              </div>
-            </div>
-            <Button
-              onClick={() => handleStartMatch(false)}
-              className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3"
-            >
-              Play for Cash
-            </Button>
-          </CardContent>
-        </Card>
+        {/* Game Modes */}
+        <motion.div 
+          className="space-y-4 mb-8"
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.6 }}
+        >
+          {gameModes.map((mode, index) => (
+            <AnimatedGameCard
+              key={index}
+              {...mode}
+              delay={0.7 + index * 0.1}
+            />
+          ))}
+        </motion.div>
 
-        {/* Practice Mode */}
-        <Card className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 backdrop-blur-md border-blue-400/30">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Target className="w-5 h-5 text-blue-400" />
-                Practice Mode
-              </div>
-              <Badge variant="secondary" className="bg-blue-500 text-white">
-                FREE
-              </Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-blue-200 text-sm mb-4">
-              Hone your skills against AI without risking real money. Perfect for beginners!
-            </p>
-            <Button
-              onClick={() => handleStartMatch(true)}
-              variant="outline"
-              className="w-full border-blue-400 text-blue-400 hover:bg-blue-400 hover:text-white font-bold py-3"
-            >
-              Start Practice
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+        {/* Leaderboard */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 1.0 }}
+          className="mb-8"
+        >
+          <AnimatedLeaderboard players={leaderboardPlayers} title="Top Players" />
+        </motion.div>
 
-      {/* Features Highlight */}
-      <Card className="bg-white/10 backdrop-blur-md border-white/20 mb-6">
-        <CardHeader>
-          <CardTitle className="text-white text-center">🎁 Why Players Love BetBingo</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <DollarSign className="w-5 h-5 text-green-400" />
-              <span className="text-purple-200 text-sm">Win real cash prizes with no hidden fees</span>
+        {/* Daily Challenges */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 1.1 }}
+          className="mb-8"
+        >
+          <div className="bg-gradient-to-r from-orange-500/20 to-red-500/20 backdrop-blur-md rounded-xl border border-orange-400/30 shadow-2xl overflow-hidden">
+            {/* Floating hearts */}
+            <div className="absolute inset-0 overflow-hidden">
+              {[...Array(5)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute text-orange-400/30"
+                  style={{
+                    left: `${20 + i * 20}%`,
+                    top: `${20 + i * 15}%`,
+                  }}
+                  animate={{
+                    y: [0, -15, 0],
+                    scale: [1, 1.2, 1],
+                    opacity: [0.3, 0.6, 0.3]
+                  }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    delay: i * 0.5
+                  }}
+                >
+                  <Heart className="w-4 h-4" />
+                </motion.div>
+              ))}
             </div>
-            <div className="flex items-center gap-3">
-              <Zap className="w-5 h-5 text-yellow-400" />
-              <span className="text-purple-200 text-sm">Fast-paced, skill-based bingo rounds</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <Gift className="w-5 h-5 text-pink-400" />
-              <span className="text-purple-200 text-sm">Instant withdrawals via PayPal</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <Users className="w-5 h-5 text-blue-400" />
-              <span className="text-purple-200 text-sm">Play against smart AI opponents</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
-      {/* Recent Winners */}
-      <Card className="bg-white/10 backdrop-blur-md border-white/20">
-        <CardHeader>
-          <CardTitle className="text-white text-center">🏆 Recent Winners</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <div className="flex justify-between items-center bg-white/5 rounded p-2">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center text-xs font-bold">1</div>
-                <span className="text-purple-200 text-sm">Sarah M.</span>
+            <div className="relative z-10 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Gift className="w-6 h-6 text-orange-400" />
+                  <h3 className="text-white text-xl font-bold">Daily Challenges</h3>
+                </div>
+                <div className="bg-orange-500 text-white px-3 py-1 rounded-full text-sm font-semibold shadow-lg">
+                  3/5 Complete
+                </div>
               </div>
-              <span className="text-green-400 font-bold">$15.50</span>
-            </div>
-            <div className="flex justify-between items-center bg-white/5 rounded p-2">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 bg-gray-400 rounded-full flex items-center justify-center text-xs font-bold">2</div>
-                <span className="text-purple-200 text-sm">Mike R.</span>
+              
+              <div className="space-y-3">
+                <motion.div 
+                  className="flex items-center justify-between text-orange-200 text-sm"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 1.2 }}
+                >
+                  <span>✅ Win 3 games in a row</span>
+                  <span className="text-orange-400 font-semibold">+50 XP</span>
+                </motion.div>
+                <motion.div 
+                  className="flex items-center justify-between text-orange-200 text-sm"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 1.3 }}
+                >
+                  <span>✅ Use 5 power-ups</span>
+                  <span className="text-orange-400 font-semibold">+30 XP</span>
+                </motion.div>
+                <motion.div 
+                  className="flex items-center justify-between text-orange-200 text-sm"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 1.4 }}
+                >
+                  <span>✅ Complete a diamond pattern</span>
+                  <span className="text-orange-400 font-semibold">+40 XP</span>
+                </motion.div>
+                <motion.div 
+                  className="flex items-center justify-between text-gray-400 text-sm"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 1.5 }}
+                >
+                  <span>⏳ Win 10 games today</span>
+                  <span className="text-gray-500">+100 XP</span>
+                </motion.div>
+                <motion.div 
+                  className="flex items-center justify-between text-gray-400 text-sm"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 1.6 }}
+                >
+                  <span>⏳ Reach level 5</span>
+                  <span className="text-gray-500">+200 XP</span>
+                </motion.div>
               </div>
-              <span className="text-green-400 font-bold">$12.75</span>
-            </div>
-            <div className="flex justify-between items-center bg-white/5 rounded p-2">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center text-xs font-bold">3</div>
-                <span className="text-purple-200 text-sm">Lisa K.</span>
-              </div>
-              <span className="text-green-400 font-bold">$8.25</span>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </motion.div>
+
+        {/* Cash Out Button */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 1.2 }}
+          className="mb-8"
+        >
+          <Button
+            onClick={() => setShowCashOutModal(true)}
+            className="w-full bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-500 hover:to-orange-500 text-white font-bold py-4 shadow-lg hover:shadow-yellow-400/25 text-lg"
+          >
+            <DollarSign className="w-5 h-5 mr-2" />
+            CASH OUT MONEY
+          </Button>
+        </motion.div>
+      </div>
+
+      {/* Cash Out Modal */}
+      <AnimatedCashOutModal
+        isOpen={showCashOutModal}
+        onClose={() => setShowCashOutModal(false)}
+        amount={user?.balance || 0}
+      />
     </div>
   );
 };

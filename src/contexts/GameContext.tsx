@@ -74,14 +74,14 @@ const initialState: GameState = {
 };
 
 const initialStats: GameStats = {
-  totalWins: 0,
-  totalLosses: 0,
-  totalEarnings: 0,
-  gamesPlayed: 0,
-  winRate: 0,
-  averageEarnings: 0,
-  bestWin: 0,
-  currentStreak: 0,
+  totalWins: 28,
+  totalLosses: 17,
+  totalEarnings: 150.00,
+  gamesPlayed: 45,
+  winRate: 62.2,
+  averageEarnings: 3.33,
+  bestWin: 25.00,
+  currentStreak: 3,
 };
 
 // Game reducer

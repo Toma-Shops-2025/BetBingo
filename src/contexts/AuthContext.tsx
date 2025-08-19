@@ -24,6 +24,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, username: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
+  signInWithProvider: (provider: 'google' | 'github') => Promise<{ error: any }>;
   updateBalance: (amount: number) => Promise<void>;
   claimBonus: () => Promise<void>;
 }
@@ -38,12 +39,39 @@ export const useAuth = () => {
   return context;
 };
 
+// Demo user for testing without Supabase
+const demoUser: AuthUser = {
+  id: 'demo-user-123',
+  email: 'demo@bingoblitz.com',
+  username: 'DemoPlayer',
+  balance: 100.00,
+  bonus: 25.00,
+  totalEarnings: 150.00,
+  gamesPlayed: 45,
+  gamesWon: 28,
+  level: 5,
+  experience: 1250,
+  avatar: undefined,
+  createdAt: new Date().toISOString()
+};
+
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isDemoMode, setIsDemoMode] = useState(true); // Set to true for demo mode
 
   useEffect(() => {
+    if (isDemoMode) {
+      // Demo mode - simulate loading and then set demo user
+      setTimeout(() => {
+        setUser(demoUser);
+        setLoading(false);
+      }, 1000);
+      return;
+    }
+
+    // Real Supabase authentication
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -67,7 +95,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [isDemoMode]);
 
   const fetchUserProfile = async (userId: string) => {
     try {
@@ -98,14 +126,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         id: userId,
         email: user.email || '',
         username: user.email?.split('@')[0] || 'Player',
-        balance: 0.00,
-        bonus: 5.00, // Welcome bonus
-        totalEarnings: 0.00,
+        balance: 0,
+        bonus: 5.00,
+        totalEarnings: 0,
         gamesPlayed: 0,
         gamesWon: 0,
         level: 1,
         experience: 0,
-        createdAt: new Date().toISOString(),
+        createdAt: new Date().toISOString()
       };
 
       const { data, error } = await supabase
@@ -125,93 +153,164 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    return { error };
+    if (isDemoMode) {
+      // Demo mode - simulate successful sign in
+      setUser(demoUser);
+      return { error: null };
+    }
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        return { error };
+      }
+
+      if (data.user) {
+        await fetchUserProfile(data.user.id);
+      }
+
+      return { error: null };
+    } catch (error) {
+      return { error };
+    }
   };
 
   const signUp = async (email: string, password: string, username: string) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          username,
-        },
-      },
-    });
-    return { error };
+    if (isDemoMode) {
+      // Demo mode - simulate successful sign up
+      const newDemoUser = { ...demoUser, email, username };
+      setUser(newDemoUser);
+      return { error: null };
+    }
+
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (error) {
+        return { error };
+      }
+
+      if (data.user) {
+        await createDefaultProfile(data.user.id);
+      }
+
+      return { error: null };
+    } catch (error) {
+      return { error };
+    }
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    if (isDemoMode) {
+      // Demo mode - simulate sign out
+      setUser(null);
+      return;
+    }
+
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
+  const signInWithProvider = async (provider: 'google' | 'github') => {
+    if (isDemoMode) {
+      // Demo mode - simulate provider sign in
+      setUser(demoUser);
+      return { error: null };
+    }
+
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: window.location.origin,
+        },
+      });
+
+      return { error };
+    } catch (error) {
+      return { error };
+    }
   };
 
   const updateBalance = async (amount: number) => {
+    if (isDemoMode) {
+      // Demo mode - update local state
+      setUser(prev => prev ? { ...prev, balance: prev.balance + amount } : null);
+      return;
+    }
+
     if (!user) return;
 
     try {
-      const newBalance = user.balance + amount;
-      const newTotalEarnings = amount > 0 ? user.totalEarnings + amount : user.totalEarnings;
-
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('profiles')
-        .update({ 
-          balance: newBalance,
-          totalEarnings: newTotalEarnings,
-          gamesPlayed: user.gamesPlayed + 1,
-          gamesWon: amount > 0 ? user.gamesWon + 1 : user.gamesWon,
-        })
-        .eq('id', user.id)
-        .select()
-        .single();
+        .update({ balance: user.balance + amount })
+        .eq('id', user.id);
 
-      if (error) {
-        console.error('Error updating balance:', error);
-      } else {
-        setUser(data);
+      if (!error) {
+        setUser(prev => prev ? { ...prev, balance: prev.balance + amount } : null);
       }
     } catch (error) {
-      console.error('Error in updateBalance:', error);
+      console.error('Error updating balance:', error);
     }
   };
 
   const claimBonus = async () => {
+    if (isDemoMode) {
+      // Demo mode - simulate claiming bonus
+      setUser(prev => prev ? { ...prev, balance: prev.balance + prev.bonus, bonus: 0 } : null);
+      return;
+    }
+
     if (!user || user.bonus <= 0) return;
 
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('profiles')
         .update({ 
           balance: user.balance + user.bonus,
-          bonus: 0,
+          bonus: 0 
         })
-        .eq('id', user.id)
-        .select()
-        .single();
+        .eq('id', user.id);
 
-      if (error) {
-        console.error('Error claiming bonus:', error);
-      } else {
-        setUser(data);
+      if (!error) {
+        setUser(prev => prev ? { 
+          ...prev, 
+          balance: prev.balance + prev.bonus, 
+          bonus: 0 
+        } : null);
       }
     } catch (error) {
-      console.error('Error in claimBonus:', error);
+      console.error('Error claiming bonus:', error);
     }
   };
 
-  const value = {
-    user,
-    session,
-    loading,
-    signIn,
-    signUp,
-    signOut,
-    updateBalance,
-    claimBonus,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        session,
+        loading,
+        signIn,
+        signUp,
+        signOut,
+        signInWithProvider,
+        updateBalance,
+        claimBonus,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 };

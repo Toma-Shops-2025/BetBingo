@@ -1,103 +1,98 @@
-# BetBingo - 1-on-1 Bingo Betting Game
+# 🎯 BingoBlitz: Win Real Rewards
 
-A modern, real-time bingo game where players can bet against each other in 1-on-1 matches. Built with React, TypeScript, and Supabase.
+A fast-paced, modern bingo game with power-ups, social features, and real rewards!
 
-## Features
+## 🚀 Features
 
-- 🎯 **1-on-1 Bingo Matches** - Play against real opponents with real bets
-- 💰 **Multiple Currencies** - Support for USD, ETH, and USDC
-- 🏆 **Leaderboard System** - Track your wins and earnings
-- 👤 **User Profiles** - View your game statistics and history
-- 🎮 **Practice Mode** - Play against AI without betting
-- 🔐 **Authentication** - Secure login with email or social providers
-- 💳 **Wallet Integration** - Manage your deposits and withdrawals
-- 📱 **Responsive Design** - Works on desktop and mobile
+### ⚡ **Fast-Paced Gameplay**
+- **30-second rounds** - Quick, exciting matches
+- **Multiple win patterns** - Lines, diamonds, corners, and more
+- **Power-ups system** - Freeze time, auto-mark, and special abilities
+- **Real-time multiplayer** - Play against friends and global players
 
-## Tech Stack
+### 🏆 **Rewards & Progression**
+- **Daily challenges** - Complete tasks for bonus rewards
+- **Achievement system** - Unlock badges and special rewards
+- **Social tournaments** - Compete with friends for prizes
+- **Progression levels** - Level up and unlock new features
 
-- **Frontend**: React 18, TypeScript, Vite
-- **UI Components**: Shadcn/ui, Tailwind CSS
-- **Backend**: Supabase (Auth, Database, Real-time)
-- **State Management**: React Context + useReducer
-- **Routing**: React Router DOM
-- **Forms**: React Hook Form + Zod validation
+### 👥 **Social Features**
+- **Friend system** - Add and challenge friends
+- **Global leaderboards** - Compete worldwide
+- **In-game chat** - Communicate during matches
+- **Team tournaments** - Form teams and compete together
 
-## Getting Started
+### 🎨 **Modern UI/UX**
+- **Beautiful animations** - Smooth, engaging interactions
+- **Dark/Light themes** - Choose your preferred theme
+- **Mobile-first design** - Optimized for all devices
+- **Accessible design** - Inclusive for all players
 
-### Prerequisites
+## 🛠️ Tech Stack
 
-- Node.js 18+ 
-- npm or yarn
-- Supabase account (for backend services)
+- **React 18** with TypeScript
+- **Vite** for fast development
+- **Tailwind CSS** for styling
+- **Framer Motion** for animations
+- **Supabase** for backend
+- **Shadcn/ui** for components
 
-### Installation
+## 🚀 Getting Started
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd BetBingo
-   ```
+```bash
+# Install dependencies
+npm install
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+# Start development server
+npm run dev
 
-3. **Set up environment variables**
-   Create a `.env.local` file in the root directory:
-   ```env
-   VITE_SUPABASE_URL=your_supabase_project_url
-   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-   ```
-
-4. **Start the development server**
-   ```bash
-   npm run dev
-   ```
-
-5. **Open your browser**
-   Navigate to `http://localhost:5173`
-
-## Game Rules
-
-1. **Match Setup**: Choose your bet amount and currency
-2. **Card Generation**: Each player gets a unique 5x5 bingo card
-3. **Number Calling**: Numbers are called automatically every 3 seconds
-4. **Marking**: Click on called numbers on your card to mark them
-5. **Winning**: First player to get 5 in a row (horizontal, vertical, or diagonal) wins
-6. **Payout**: Winner takes the pot (both players' bets)
-
-## Project Structure
-
-```
-src/
-├── components/          # React components
-│   ├── ui/             # Shadcn/ui components
-│   ├── AppLayout.tsx   # Main app layout
-│   ├── BingoCard.tsx   # Bingo card component
-│   ├── GameScreen.tsx  # Game interface
-│   └── ...
-├── contexts/           # React contexts
-│   ├── AuthContext.tsx # Authentication state
-│   ├── GameContext.tsx # Game state management
-│   └── AppContext.tsx  # App-wide state
-├── types/              # TypeScript type definitions
-├── utils/              # Utility functions
-└── lib/                # Third-party library configs
+# Build for production
+npm run build
 ```
 
-## Contributing
+## 🎮 Game Modes
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+### Quick Play
+- Fast 30-second rounds
+- Perfect for quick gaming sessions
+- Earn rewards and experience
 
-## License
+### Tournament Mode
+- Competitive tournaments
+- Prize pools and rankings
+- Scheduled events
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+### Practice Mode
+- Free AI games
+- Learn strategies
+- No risk, all fun
 
-## Disclaimer
+## 🏆 Unique Features
 
-This is a gambling application. Please ensure you comply with local laws and regulations regarding online gambling. Play responsibly.
+Unlike traditional bingo apps, BingoBlitz offers:
+- **Power-ups** that add strategy to the game
+- **Multiple win patterns** beyond just lines
+- **Social tournaments** with friends
+- **Achievement-based progression** system
+- **Daily challenges** for consistent engagement
+
+## 📱 Mobile Optimized
+
+Built with mobile-first design principles:
+- Touch-friendly controls
+- Responsive layouts
+- Fast loading times
+- Offline capability
+
+## 🎯 Roadmap
+
+- [ ] Power-ups system
+- [ ] Social tournaments
+- [ ] Achievement system
+- [ ] Daily challenges
+- [ ] Mobile app
+- [ ] Real rewards integration
+
+---
+
+**BingoBlitz** - Where speed meets strategy! ⚡🎯

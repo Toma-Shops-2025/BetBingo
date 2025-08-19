@@ -4,9 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Settings, Volume2, Bell, Shield, Palette, Globe } from 'lucide-react';
+import { Settings, Volume2, Bell, Shield, Palette, Globe, LogOut, Sparkles } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 const SettingsScreen: React.FC = () => {
+  const { signOut, user } = useAuth();
   const [settings, setSettings] = useState({
     soundEnabled: true,
     notifications: true,
@@ -20,12 +22,29 @@ const SettingsScreen: React.FC = () => {
     setSettings(prev => ({ ...prev, [key]: value }));
   };
 
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-600 p-4 pb-20">
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-4 pb-20">
       <div className="max-w-md mx-auto">
         <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold text-white mb-2">Settings</h1>
-          <p className="text-purple-200">Customize your BetBingo experience</p>
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <Sparkles className="w-6 h-6 text-yellow-400" />
+            <h1 className="text-3xl font-bold text-white">BingoBlitz</h1>
+            <Sparkles className="w-6 h-6 text-yellow-400" />
+          </div>
+          <p className="text-purple-200">⚡ Where speed meets strategy!</p>
+          {user && (
+            <p className="text-purple-300 text-sm mt-2">
+              Signed in as: <span className="text-white font-medium">{user.username}</span>
+            </p>
+          )}
         </div>
 
         {/* Game Settings */}
@@ -45,6 +64,17 @@ const SettingsScreen: React.FC = () => {
               <Switch
                 checked={settings.autoMark}
                 onCheckedChange={(checked) => handleSettingChange('autoMark', checked)}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label className="text-white">Power-ups Enabled</Label>
+                <p className="text-sm text-purple-200">Use power-ups during gameplay</p>
+              </div>
+              <Switch
+                checked={true}
+                disabled
+                className="opacity-50"
               />
             </div>
           </CardContent>
@@ -72,7 +102,7 @@ const SettingsScreen: React.FC = () => {
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label className="text-white">Push Notifications</Label>
-                <p className="text-sm text-purple-200">Get notified about new matches</p>
+                <p className="text-sm text-purple-200">Get notified about tournaments</p>
               </div>
               <Switch
                 checked={settings.notifications}
@@ -104,6 +134,20 @@ const SettingsScreen: React.FC = () => {
                 </SelectContent>
               </Select>
             </div>
+            <div className="space-y-2">
+              <Label className="text-white">Language</Label>
+              <Select value={settings.language} onValueChange={(value) => handleSettingChange('language', value)}>
+                <SelectTrigger className="bg-white/20 border-white/30 text-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="en">English</SelectItem>
+                  <SelectItem value="es">Español</SelectItem>
+                  <SelectItem value="fr">Français</SelectItem>
+                  <SelectItem value="de">Deutsch</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </CardContent>
         </Card>
 
@@ -129,41 +173,34 @@ const SettingsScreen: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Language */}
+        {/* Account Actions */}
         <Card className="bg-white/10 backdrop-blur-md border-white/20 mb-6">
           <CardHeader>
-            <CardTitle className="text-white flex items-center">
-              <Globe className="w-5 h-5 mr-2" />
-              Language
-            </CardTitle>
+            <CardTitle className="text-white">Account</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label className="text-white">Language</Label>
-              <Select value={settings.language} onValueChange={(value) => handleSettingChange('language', value)}>
-                <SelectTrigger className="bg-white/20 border-white/30 text-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="en">English</SelectItem>
-                  <SelectItem value="es">Español</SelectItem>
-                  <SelectItem value="fr">Français</SelectItem>
-                  <SelectItem value="de">Deutsch</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <Button
+              variant="outline"
+              onClick={handleSignOut}
+              className="w-full border-red-400/30 text-red-400 hover:bg-red-400/10"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Sign Out
+            </Button>
           </CardContent>
         </Card>
 
-        {/* Action Buttons */}
-        <div className="space-y-3">
-          <Button className="w-full bg-green-500 hover:bg-green-600">
-            Save Settings
-          </Button>
-          <Button variant="outline" className="w-full border-white/30 text-white hover:bg-white/10">
-            Reset to Default
-          </Button>
-        </div>
+        {/* App Info */}
+        <Card className="bg-white/10 backdrop-blur-md border-white/20">
+          <CardContent className="text-center py-4">
+            <p className="text-purple-300 text-sm">
+              BingoBlitz v1.0.0
+            </p>
+            <p className="text-purple-400 text-xs mt-1">
+              ⚡ Fast-paced bingo with power-ups
+            </p>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

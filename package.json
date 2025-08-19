@@ -1,7 +1,8 @@
 {
-  "name": "vite_react_shadcn_ts",
+  "name": "bingo-blitz",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "BingoBlitz: Win Real Rewards - Fast-paced bingo with power-ups and social features",
   "type": "module",
   "scripts": {
     "dev": "vite",

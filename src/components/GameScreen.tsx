@@ -6,6 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { Trophy, Clock, MessageCircle, Users, Crown, DollarSign, Sparkles } from 'lucide-react';
 import { useGame } from '@/contexts/GameContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { BingoCard as BingoCardType } from '@/types';
 import AnimatedBingoCard from './AnimatedBingoCard';
 import ChatSystem from './ChatSystem';
 import AnimatedConfetti from './AnimatedConfetti';
@@ -49,6 +50,20 @@ const GameScreen: React.FC = () => {
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
+
+  // Convert number[][] to BingoCard format
+  const convertToBingoCard = (numbers: number[][] | null, id: string): BingoCardType | null => {
+    if (!numbers) return null;
+    
+    return {
+      id,
+      numbers: numbers.map(row => row.map(num => num)),
+      marked: Array(5).fill(null).map(() => Array(5).fill(false))
+    };
+  };
+
+  const playerBingoCard = convertToBingoCard(playerCard, 'player-card');
+  const opponentBingoCard = convertToBingoCard(opponentCard, 'opponent-card');
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -186,13 +201,17 @@ const GameScreen: React.FC = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="relative z-10">
-                {playerCard && (
+                {playerBingoCard ? (
                   <AnimatedBingoCard 
-                    card={playerCard}
+                    card={playerBingoCard}
                     onNumberClick={(number) => {
                       // Add number marking logic
                     }}
                   />
+                ) : (
+                  <div className="text-center text-white/60 py-8">
+                    <p>No card available</p>
+                  </div>
                 )}
               </CardContent>
             </Card>
@@ -214,11 +233,15 @@ const GameScreen: React.FC = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="relative z-10">
-                {opponentCard && (
+                {opponentBingoCard ? (
                   <AnimatedBingoCard 
-                    card={opponentCard}
+                    card={opponentBingoCard}
                     disabled={true}
                   />
+                ) : (
+                  <div className="text-center text-white/60 py-8">
+                    <p>No opponent card available</p>
+                  </div>
                 )}
               </CardContent>
             </Card>

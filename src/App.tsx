@@ -10,7 +10,14 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { ErrorBoundary } from "react-error-boundary";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 // Error Fallback Component
 const ErrorFallback = ({ error }: { error: Error }) => {
@@ -34,7 +41,7 @@ const ErrorFallback = ({ error }: { error: Error }) => {
 
 const App = () => (
   <ErrorBoundary FallbackComponent={ErrorFallback}>
-    <ThemeProvider defaultTheme="light">
+    <ThemeProvider defaultTheme="dark">
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <GameProvider>

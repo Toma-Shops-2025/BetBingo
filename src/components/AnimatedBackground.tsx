@@ -32,15 +32,6 @@ const AnimatedBackground: React.FC = () => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Set canvas size
-    const resizeCanvas = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      createBuildings();
-    };
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-
     // Create cityscape buildings
     const createBuildings = () => {
       buildingsRef.current = [];
@@ -76,6 +67,16 @@ const AnimatedBackground: React.FC = () => {
         x += width + Math.random() * 20 + 5;
       }
     };
+
+    // Set canvas size
+    const resizeCanvas = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      createBuildings();
+    };
+    
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
 
     // Enhanced particle colors
     const particleColors = [

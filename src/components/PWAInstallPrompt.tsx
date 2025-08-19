@@ -95,7 +95,7 @@ const PWAInstallPrompt: React.FC = () => {
                 <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg p-2">
                   <Smartphone className="w-5 h-5 text-white" />
                 </div>
-                <h3 className="text-white font-bold">Install Bingo Blast</h3>
+                <h3 className="text-white font-bold">Install Bet Bingo Cash</h3>
               </div>
               <button
                 onClick={handleDismiss}

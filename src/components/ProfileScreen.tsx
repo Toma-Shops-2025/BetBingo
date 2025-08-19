@@ -1,164 +1,384 @@
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User, Trophy, TrendingUp, Calendar, Settings, LogOut } from 'lucide-react';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { 
+  User, 
+  Star, 
+  Trophy, 
+  DollarSign, 
+  Calendar, 
+  Crown, 
+  Target, 
+  TrendingUp,
+  Edit3,
+  Camera,
+  Award,
+  Zap,
+  Shield,
+  Settings
+} from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import GameHistory from './GameHistory';
 
 const ProfileScreen: React.FC = () => {
-  const { user, signOut } = useAuth();
+  const { user, updateUser } = useAuth();
+  const [editMode, setEditMode] = useState(false);
+  const [username, setUsername] = useState(user?.username || '');
 
-  const userStats = {
-    name: user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Anonymous User',
-    email: user?.email || 'Not logged in',
-    joinDate: user?.created_at ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'Unknown',
-    totalGames: 45,
-    wins: 12,
-    losses: 33,
-    winRate: 26.7,
-    totalEarnings: 1250,
-    bestStreak: 3,
-    favoriteMode: 'Quick Match'
-  };
-
-  const recentMatches = [
-    { id: '1', opponent: 'BingoKing', result: 'loss' as const, betAmount: 50, currency: 'USD', date: '2 hours ago', duration: '5:23' },
-    { id: '2', opponent: 'LuckyPlayer', result: 'win' as const, betAmount: 100, currency: 'USD', date: '1 day ago', duration: '3:45' },
-    { id: '3', opponent: 'NumberMaster', result: 'loss' as const, betAmount: 25, currency: 'USD', date: '2 days ago', duration: '7:12' },
-    { id: '4', opponent: 'BingoQueen', result: 'win' as const, betAmount: 75, currency: 'USD', date: '3 days ago', duration: '4:30' },
+  const stats = [
+    { 
+      label: 'Total Winnings', 
+      value: `$${user?.totalEarnings.toFixed(2)}`, 
+      icon: DollarSign, 
+      color: 'from-green-500 to-emerald-600',
+      change: '+12.5%'
+    },
+    { 
+      label: 'Games Played', 
+      value: user?.gamesPlayed.toString(), 
+      icon: Target, 
+      color: 'from-blue-500 to-cyan-600',
+      change: '+8 today'
+    },
+    { 
+      label: 'Win Rate', 
+      value: `${((user?.gamesWon || 0) / Math.max(user?.gamesPlayed || 1, 1) * 100).toFixed(1)}%`, 
+      icon: Trophy, 
+      color: 'from-yellow-500 to-orange-600',
+      change: '+2.3%'
+    },
+    { 
+      label: 'Current Level', 
+      value: user?.level.toString(), 
+      icon: Star, 
+      color: 'from-purple-500 to-pink-600',
+      change: 'VIP Gold'
+    }
   ];
 
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-    } catch (error) {
-      console.error('Error signing out:', error);
+  const achievements = [
+    { 
+      name: 'First Win', 
+      description: 'Win your first bingo game', 
+      completed: (user?.gamesWon || 0) > 0,
+      icon: Trophy,
+      reward: '$5 Bonus'
+    },
+    { 
+      name: 'High Roller', 
+      description: 'Play 10 games with $5+ entry fee', 
+      completed: false,
+      icon: Crown,
+      reward: '$25 Bonus'
+    },
+    { 
+      name: 'Lucky Streak', 
+      description: 'Win 3 games in a row', 
+      completed: false,
+      icon: Zap,
+      reward: '$10 Bonus'
+    },
+    { 
+      name: 'VIP Member', 
+      description: 'Reach level 10', 
+      completed: (user?.level || 0) >= 10,
+      icon: Shield,
+      reward: 'VIP Status'
     }
+  ];
+
+  const vipPerks = [
+    { name: 'Higher Daily Bonuses', active: true },
+    { name: 'Exclusive VIP Rooms', active: user?.level >= 5 },
+    { name: 'Personal Account Manager', active: user?.level >= 10 },
+    { name: 'Faster Withdrawals', active: user?.level >= 5 },
+    { name: 'Birthday Bonus', active: true },
+    { name: 'Special Tournaments', active: user?.level >= 3 }
+  ];
+
+  const saveProfile = () => {
+    if (username.trim() && username !== user?.username) {
+      updateUser({ username: username.trim() });
+    }
+    setEditMode(false);
   };
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-600 p-4 pb-20 flex items-center justify-center">
-        <Card className="bg-white/10 backdrop-blur-md border-white/20 p-6 text-center">
-          <User className="w-16 h-16 mx-auto text-white mb-4" />
-          <h2 className="text-xl font-bold text-white mb-2">Not Signed In</h2>
-          <p className="text-purple-200 mb-4">Please sign in to view your profile</p>
-        </Card>
-      </div>
-    );
-  }
+  const getVipLevel = () => {
+    const level = user?.level || 0;
+    if (level >= 20) return { name: 'Diamond', color: 'from-cyan-400 to-blue-500' };
+    if (level >= 15) return { name: 'Platinum', color: 'from-gray-300 to-gray-400' };
+    if (level >= 10) return { name: 'Gold', color: 'from-yellow-400 to-orange-500' };
+    if (level >= 5) return { name: 'Silver', color: 'from-gray-400 to-gray-500' };
+    return { name: 'Bronze', color: 'from-orange-600 to-red-600' };
+  };
+
+  const vipLevel = getVipLevel();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-600 p-4 pb-20">
-      <div className="max-w-md mx-auto">
-        <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold text-white mb-2">Profile</h1>
-        </div>
+    <div className="p-4 space-y-6">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center"
+      >
+        <h1 className="text-3xl font-black bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">
+          MY PROFILE
+        </h1>
+        <p className="text-purple-300 text-lg">Your gambling journey & achievements</p>
+      </motion.div>
 
-        {/* User Info */}
-        <Card className="bg-white/10 backdrop-blur-md border-white/20 mb-6">
-          <CardContent className="p-6 text-center">
-            <Avatar className="w-20 h-20 mx-auto mb-4">
-              <AvatarImage src={user?.user_metadata?.avatar_url} />
-              <AvatarFallback className="bg-purple-500 text-white text-2xl">
-                {userStats.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <h2 className="text-xl font-bold text-white mb-1">{userStats.name}</h2>
-            <p className="text-purple-200 mb-2">{userStats.email}</p>
-            <Badge variant="secondary" className="bg-yellow-400 text-yellow-800">
-              Member since {userStats.joinDate}
-            </Badge>
-            {user?.email_confirmed_at && (
-              <Badge variant="default" className="bg-green-500 text-white ml-2">
-                Verified
-              </Badge>
-            )}
-          </CardContent>
-        </Card>
+      {/* Profile Card */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.2 }}
+        className="bg-gradient-to-br from-purple-800/40 via-blue-800/40 to-purple-800/40 backdrop-blur-xl border border-purple-400/30 rounded-3xl p-6 shadow-2xl"
+      >
+        <div className="flex items-center space-x-6">
+          {/* Avatar */}
+          <div className="relative">
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              className="w-24 h-24 bg-gradient-to-br from-purple-400 to-blue-400 rounded-full flex items-center justify-center shadow-2xl"
+            >
+              {user?.avatar ? (
+                <img 
+                  src={user.avatar} 
+                  alt="Profile" 
+                  className="w-full h-full rounded-full object-cover"
+                />
+              ) : (
+                <User className="w-12 h-12 text-white" />
+              )}
+            </motion.div>
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              className="absolute -bottom-2 -right-2 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full p-2 shadow-lg"
+            >
+              <Camera className="w-4 h-4 text-white" />
+            </motion.button>
+          </div>
 
-        {/* User ID for debugging */}
-        <Card className="bg-white/10 backdrop-blur-md border-white/20 mb-6">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center">
-              <User className="w-5 h-5 mr-2" />
-              Account Info
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="text-white">
-              <span className="text-purple-200">User ID: </span>
-              <span className="font-mono text-xs">{user.id}</span>
-            </div>
-            <div className="text-white">
-              <span className="text-purple-200">Provider: </span>
-              <span>{user.app_metadata?.provider || 'email'}</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Stats */}
-        <Card className="bg-white/10 backdrop-blur-md border-white/20 mb-6">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center">
-              <Trophy className="w-5 h-5 mr-2" />
-              Game Statistics
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-white">{userStats.totalGames}</p>
-                <p className="text-purple-200 text-sm">Total Games</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-green-400">{userStats.wins}</p>
-                <p className="text-purple-200 text-sm">Wins</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-red-400">{userStats.losses}</p>
-                <p className="text-purple-200 text-sm">Losses</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-yellow-400">{userStats.winRate}%</p>
-                <p className="text-purple-200 text-sm">Win Rate</p>
-              </div>
+          {/* User Info */}
+          <div className="flex-1">
+            <div className="flex items-center space-x-3 mb-2">
+              {editMode ? (
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="bg-purple-900/50 border border-purple-400/30 rounded-lg px-3 py-1 text-white text-xl font-bold focus:outline-none focus:ring-2 focus:ring-purple-400"
+                  />
+                  <button
+                    onClick={saveProfile}
+                    className="bg-green-500/20 border border-green-400/30 rounded-lg p-1 text-green-400 hover:bg-green-500/30"
+                  >
+                    <User className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <h2 className="text-white text-2xl font-black">{user?.username}</h2>
+                  <button
+                    onClick={() => setEditMode(true)}
+                    className="text-purple-400 hover:text-purple-300"
+                  >
+                    <Edit3 className="w-4 h-4" />
+                  </button>
+                </>
+              )}
             </div>
             
-            <div className="pt-4 border-t border-white/20">
-              <div className="flex justify-between text-white">
-                <span>Total Earnings:</span>
-                <span className="font-bold text-green-400">${userStats.totalEarnings}</span>
+            {/* VIP Status */}
+            <div className={`inline-flex items-center space-x-2 bg-gradient-to-r ${vipLevel.color} rounded-full px-4 py-2 mb-3`}>
+              <Crown className="w-4 h-4 text-white" />
+              <span className="text-white font-bold text-sm">VIP {vipLevel.name}</span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <p className="text-purple-300">Member Since</p>
+                <p className="text-white font-semibold">{new Date(user?.createdAt || '').toLocaleDateString()}</p>
               </div>
-              <div className="flex justify-between text-white mt-2">
-                <span>Best Streak:</span>
-                <span className="font-bold">{userStats.bestStreak} wins</span>
+              <div>
+                <p className="text-purple-300">Current Balance</p>
+                <p className="text-green-400 font-bold text-lg">${user?.balance.toFixed(2)}</p>
               </div>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Recent Matches */}
-        <GameHistory history={recentMatches} />
-
-        {/* Action Buttons */}
-        <div className="space-y-3">
-          <Button variant="outline" className="w-full border-white/30 text-white hover:bg-white/10">
-            <Settings className="w-4 h-4 mr-2" />
-            Account Settings
-          </Button>
-          <Button 
-            variant="outline" 
-            className="w-full border-red-400/30 text-red-400 hover:bg-red-400/10"
-            onClick={handleSignOut}
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            Sign Out
-          </Button>
+          </div>
         </div>
+
+        {/* Experience Bar */}
+        <div className="mt-6">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-purple-300 text-sm">Level {user?.level} Progress</span>
+            <span className="text-purple-300 text-sm">{user?.experience || 0}/1000 XP</span>
+          </div>
+          <div className="bg-purple-900/30 rounded-full h-3 overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${((user?.experience || 0) % 1000) / 10}%` }}
+              transition={{ delay: 0.5, duration: 1 }}
+              className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"
+            />
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {stats.map((stat, index) => {
+          const Icon = stat.icon;
+          return (
+            <motion.div
+              key={stat.label}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 + index * 0.1 }}
+              className={`bg-gradient-to-r ${stat.color}/20 border border-${stat.color.split('-')[1]}-400/30 rounded-2xl p-4 backdrop-blur-md`}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className={`p-2 bg-gradient-to-r ${stat.color} rounded-lg`}>
+                  <Icon className="w-5 h-5 text-white" />
+                </div>
+                <span className="text-green-400 text-xs font-bold">{stat.change}</span>
+              </div>
+              <div className={`text-${stat.color.split('-')[1]}-300 text-2xl font-black mb-1`}>
+                {stat.value}
+              </div>
+              <p className={`text-${stat.color.split('-')[1]}-400 text-sm`}>{stat.label}</p>
+            </motion.div>
+          );
+        })}
       </div>
+
+      {/* Achievements */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+        className="space-y-4"
+      >
+        <h3 className="text-white text-xl font-bold">Achievements</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {achievements.map((achievement, index) => {
+            const Icon = achievement.icon;
+            return (
+              <motion.div
+                key={achievement.name}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.6 + index * 0.1 }}
+                className={`bg-gradient-to-r ${
+                  achievement.completed
+                    ? 'from-green-600/30 to-emerald-600/30 border-green-400/40'
+                    : 'from-gray-600/20 to-gray-700/20 border-gray-400/20'
+                } border-2 rounded-2xl p-4 backdrop-blur-md`}
+              >
+                <div className="flex items-center space-x-4">
+                  <div className={`p-3 rounded-xl ${
+                    achievement.completed
+                      ? 'bg-gradient-to-r from-green-500 to-emerald-600'
+                      : 'bg-gray-600/30'
+                  }`}>
+                    <Icon className={`w-6 h-6 ${
+                      achievement.completed ? 'text-white' : 'text-gray-400'
+                    }`} />
+                  </div>
+                  
+                  <div className="flex-1">
+                    <h4 className={`font-bold ${
+                      achievement.completed ? 'text-green-300' : 'text-gray-300'
+                    }`}>
+                      {achievement.name}
+                    </h4>
+                    <p className={`text-sm ${
+                      achievement.completed ? 'text-green-400' : 'text-gray-400'
+                    }`}>
+                      {achievement.description}
+                    </p>
+                    <div className={`inline-block mt-1 px-2 py-1 rounded-full text-xs font-bold ${
+                      achievement.completed
+                        ? 'bg-green-500/20 text-green-300'
+                        : 'bg-yellow-500/20 text-yellow-300'
+                    }`}>
+                      {achievement.reward}
+                    </div>
+                  </div>
+
+                  {achievement.completed && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="text-green-400"
+                    >
+                      ✓
+                    </motion.div>
+                  )}
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      </motion.div>
+
+      {/* VIP Perks */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.7 }}
+        className="bg-gradient-to-r from-yellow-600/20 to-orange-600/20 border-2 border-yellow-400/40 rounded-2xl p-6 backdrop-blur-md"
+      >
+        <div className="flex items-center space-x-3 mb-6">
+          <div className="bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl p-3">
+            <Crown className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h3 className="text-yellow-300 font-bold text-lg">VIP {vipLevel.name} Perks</h3>
+            <p className="text-yellow-400 text-sm">Exclusive benefits for our valued players</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {vipPerks.map((perk, index) => (
+            <motion.div
+              key={perk.name}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.8 + index * 0.05 }}
+              className={`flex items-center space-x-3 p-3 rounded-lg ${
+                perk.active
+                  ? 'bg-green-500/20 border border-green-400/30'
+                  : 'bg-gray-600/20 border border-gray-400/20'
+              }`}
+            >
+              <div className={`w-2 h-2 rounded-full ${
+                perk.active ? 'bg-green-400' : 'bg-gray-400'
+              }`} />
+              <span className={`text-sm font-medium ${
+                perk.active ? 'text-green-300' : 'text-gray-400'
+              }`}>
+                {perk.name}
+              </span>
+              {perk.active && (
+                <Award className="w-4 h-4 text-green-400" />
+              )}
+            </motion.div>
+          ))}
+        </div>
+      </motion.div>
+
+      {/* Account Settings Button */}
+      <motion.button
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.9 }}
+        className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold py-4 px-6 rounded-2xl transition-all shadow-lg flex items-center justify-center space-x-2"
+      >
+        <Settings className="w-5 h-5" />
+        <span>Account Settings</span>
+      </motion.button>
     </div>
   );
 };

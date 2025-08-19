@@ -3,13 +3,19 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
+// Log environment status (only in development)
+if (import.meta.env.DEV) {
+  console.log('Supabase URL:', supabaseUrl ? 'Set' : 'Missing')
+  console.log('Supabase Key:', supabaseAnonKey ? 'Set' : 'Missing')
+}
+
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('Supabase environment variables not found. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY')
+  console.warn('Supabase environment variables not found. Using fallback values for demo mode.')
 }
 
 export const supabase = createClient(
   supabaseUrl || 'https://cppndnipdjkctrteudht.supabase.co',
-  supabaseAnonKey || 'your-anon-key-here'
+  supabaseAnonKey || 'demo-key-fallback'
 )
 
 export type { User, Session } from '@supabase/supabase-js'

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Users, Clock, DollarSign, Trophy, Star, Zap, Crown, Fire, Shield, Gift } from 'lucide-react';
+import { Users, Clock, DollarSign, Trophy, Star, Zap, Crown, Flame, Shield, Gift } from 'lucide-react';
 import { useGame } from '@/contexts/GameContext';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -100,7 +100,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({ onJoinGame }) => {
       timeToNext: '1:23',
       difficulty: 'Hard',
       color: 'from-orange-500 to-red-600',
-      icon: Fire,
+      icon: Flame,
       popular: true,
       type: 'Jackpot'
     }

@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Wallet, User, Bell, Settings, Menu, DollarSign, Gift } from 'lucide-react';
+import PWAInstallButton from './PWAInstallButton';
 
 interface TopHeaderProps {
   user: any;
@@ -94,6 +95,15 @@ const TopHeader: React.FC<TopHeaderProps> = ({ user, onCashierClick, onProfileCl
               <span className="text-sm">DEPOSIT</span>
             </div>
           </motion.button>
+
+          {/* PWA Install Button */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.55 }}
+          >
+            <PWAInstallButton />
+          </motion.div>
 
           {/* Notifications */}
           <motion.button

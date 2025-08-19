@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Users, Clock, DollarSign, Trophy, Star, Zap, Crown, Flame, Shield, Gift } from 'lucide-react';
 import { useGame } from '@/contexts/GameContext';
 import { useAuth } from '@/contexts/AuthContext';
+import PWAInstallButton from './PWAInstallButton';
 
 interface LobbyScreenProps {
   onJoinGame: () => void;
@@ -126,9 +127,12 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({ onJoinGame }) => {
         transition={{ duration: 0.6 }}
         className="text-center"
       >
-        <h1 className="text-3xl font-black bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 bg-clip-text text-transparent mb-2">
-          GAME LOBBY
-        </h1>
+        <div className="flex items-center justify-center space-x-4 mb-4">
+          <h1 className="text-3xl font-black bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 bg-clip-text text-transparent">
+            GAME LOBBY
+          </h1>
+          <PWAInstallButton />
+        </div>
         <p className="text-purple-300 text-lg">Choose your room and start winning!</p>
       </motion.div>
 

@@ -15,6 +15,7 @@ import AnimatedBackground from './AnimatedBackground';
 import GamblingNavigation from './GamblingNavigation';
 import TopHeader from './TopHeader';
 import AnimatedLoadingScreen from './AnimatedLoadingScreen';
+import PWAInstallPrompt from './PWAInstallPrompt';
 
 type ScreenType = 'lobby' | 'game' | 'cashier' | 'profile' | 'leaderboard' | 'settings';
 
@@ -157,6 +158,9 @@ const AppLayout: React.FC = () => {
           activeScreen={activeScreen} 
           onScreenChange={(screen: ScreenType) => setActiveScreen(screen)} 
         />
+        
+        {/* PWA Install Prompt */}
+        <PWAInstallPrompt />
       </div>
     </div>
   );

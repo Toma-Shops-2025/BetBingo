@@ -18,19 +18,19 @@
       "purpose": "any"
     },
     {
-      "src": "/icon-48.png",
+      "src": "/favicon.png",
       "sizes": "48x48",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/favicon.png",
+      "src": "/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/favicon.png",
+      "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
@@ -38,58 +38,67 @@
   ],
   "screenshots": [
     {
-      "src": "/screenshot-mobile.png",
-      "sizes": "390x844",
-      "type": "image/png",
-      "form_factor": "narrow"
-    },
-    {
-      "src": "/screenshot-desktop.png",
+      "src": "/logo.png",
       "sizes": "1280x720",
       "type": "image/png",
-      "form_factor": "wide"
+      "form_factor": "wide",
+      "label": "Bet Bingo Cash Lobby"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Mobile Game View"
     }
   ],
   "shortcuts": [
     {
       "name": "Play Now",
       "short_name": "Play",
-      "description": "Start playing bingo games immediately",
-      "url": "/",
+      "description": "Start playing bingo immediately",
+      "url": "/play",
       "icons": [
         {
           "src": "/favicon.png",
-          "sizes": "48x48"
+          "sizes": "96x96"
         }
       ]
     },
     {
-      "name": "Cashier",
-      "short_name": "Cashier",
-      "description": "Deposit or withdraw funds",
-      "url": "/",
+      "name": "Deposit Funds",
+      "short_name": "Deposit",
+      "description": "Add money to your account",
+      "url": "/cashier",
       "icons": [
         {
           "src": "/favicon.png",
-          "sizes": "48x48"
-        }
-      ]
-    },
-    {
-      "name": "Leaderboard",
-      "short_name": "Rankings",
-      "description": "Check player rankings and prizes",
-      "url": "/",
-      "icons": [
-        {
-          "src": "/favicon.png",
-          "sizes": "48x48"
+          "sizes": "96x96"
         }
       ]
     }
   ],
+  "related_applications": [],
   "prefer_related_applications": false,
+  "id": "betbingo-cash-app",
   "edge_side_panel": {
     "preferred_width": 400
+  },
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
+  "handle_links": "preferred",
+  "capture_links": "new-client",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "file_handlers": [],
+  "protocol_handlers": [],
+  "share_target": {
+    "action": "/share",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
   }
 } 

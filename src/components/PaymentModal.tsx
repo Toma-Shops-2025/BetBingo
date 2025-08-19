@@ -89,12 +89,14 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
         exit={{ opacity: 0 }}
         className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
       >
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.8, opacity: 0 }}
-          className="bg-gradient-to-br from-purple-800/95 via-blue-800/95 to-purple-800/95 backdrop-blur-xl border border-purple-400/30 rounded-2xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto"
-        >
+              <motion.div
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.8, opacity: 0 }}
+        className="bg-gradient-to-br from-purple-800/95 via-blue-800/95 to-purple-800/95 backdrop-blur-xl border border-purple-400/30 rounded-2xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto"
+        role="dialog"
+        aria-describedby="payment-modal-description"
+      >
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-3">
@@ -103,7 +105,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               </div>
               <div>
                 <h3 className="text-white text-xl font-bold">Payment Details</h3>
-                <p className="text-purple-300 text-sm">{method} - ${amount}</p>
+                <p id="payment-modal-description" className="text-purple-300 text-sm">{method} - ${amount}</p>
               </div>
             </div>
             <button

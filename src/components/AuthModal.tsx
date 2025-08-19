@@ -59,14 +59,17 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 border-purple-500/30">
+      <DialogContent 
+        className="sm:max-w-md bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 border-purple-500/30"
+        aria-describedby="auth-modal-description"
+      >
         <DialogHeader className="text-center">
           <div className="flex items-center justify-center gap-2 mb-2">
             <Sparkles className="w-6 h-6 text-yellow-400" />
             <DialogTitle className="text-2xl font-bold text-white">BingoBlitz</DialogTitle>
             <Sparkles className="w-6 h-6 text-yellow-400" />
           </div>
-          <p className="text-purple-200 text-sm">⚡ Where speed meets strategy!</p>
+          <p id="auth-modal-description" className="text-purple-200 text-sm">⚡ Where speed meets strategy!</p>
         </DialogHeader>
         <Tabs defaultValue="signin" className="w-full">
           <TabsList className="grid w-full grid-cols-2 bg-white/10 backdrop-blur-md border-white/20">

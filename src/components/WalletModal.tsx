@@ -92,7 +92,10 @@ const WalletModal: React.FC = () => {
           Wallet
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 border-white/20">
+      <DialogContent 
+        className="max-w-md bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 border-white/20"
+        aria-describedby="wallet-modal-description"
+      >
         <DialogHeader>
           <DialogTitle className="text-white text-xl">💰 Wallet & Payments</DialogTitle>
         </DialogHeader>

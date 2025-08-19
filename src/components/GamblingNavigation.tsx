@@ -2,13 +2,15 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Home, CreditCard, User, Trophy, Settings, Play } from 'lucide-react';
 
+type ScreenType = 'lobby' | 'game' | 'cashier' | 'profile' | 'leaderboard' | 'settings';
+
 interface GamblingNavigationProps {
-  activeScreen: string;
-  onScreenChange: (screen: string) => void;
+  activeScreen: ScreenType;
+  onScreenChange: (screen: ScreenType) => void;
 }
 
 const GamblingNavigation: React.FC<GamblingNavigationProps> = ({ activeScreen, onScreenChange }) => {
-  const navItems = [
+  const navItems: Array<{id: ScreenType, label: string, icon: any, gradient: string}> = [
     { 
       id: 'lobby', 
       label: 'Lobby', 
@@ -38,6 +40,12 @@ const GamblingNavigation: React.FC<GamblingNavigationProps> = ({ activeScreen, o
       label: 'Profile', 
       icon: User,
       gradient: 'from-indigo-500 to-purple-500'
+    },
+    { 
+      id: 'settings', 
+      label: 'Settings', 
+      icon: Settings,
+      gradient: 'from-gray-500 to-gray-600'
     }
   ];
 

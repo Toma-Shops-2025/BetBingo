@@ -11,7 +11,7 @@ import ProfileScreen from './ProfileScreen';
 import LeaderboardScreen from './LeaderboardScreen';
 import SettingsScreen from './SettingsScreen';
 import AuthModal from './AuthModal';
-import AnimatedBackground from './AnimatedBackground';
+import { PitchBlackBackground } from './ModernBackgrounds';
 import GamblingNavigation from './GamblingNavigation';
 import TopHeader from './TopHeader';
 import AnimatedLoadingScreen from './AnimatedLoadingScreen';
@@ -40,8 +40,8 @@ const AppLayout: React.FC = () => {
   // Show authentication modal if user is not signed in
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
-        <AnimatedBackground />
+      <div className="min-h-screen bg-black flex items-center justify-center p-4">
+        <PitchBlackBackground />
         <div className="relative z-10 text-center max-w-md w-full">
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
@@ -57,7 +57,7 @@ const AppLayout: React.FC = () => {
               className="mb-8"
             >
               <h1 className="text-4xl font-black bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 bg-clip-text text-transparent mb-2">
-                BINGO BLAST
+                BET<br/>BINGO<br/>CASH
               </h1>
               <p className="text-purple-200 text-lg">Real Money • Real Wins</p>
             </motion.div>
@@ -125,9 +125,9 @@ const AppLayout: React.FC = () => {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 relative overflow-hidden">
-      <AnimatedBackground />
+      return (
+      <div className="min-h-screen bg-black relative overflow-hidden">
+        <PitchBlackBackground />
       
       <div className="relative z-10 flex flex-col min-h-screen">
         {/* Top Header */}

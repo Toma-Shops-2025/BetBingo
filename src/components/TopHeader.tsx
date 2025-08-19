@@ -32,8 +32,8 @@ const TopHeader: React.FC<TopHeaderProps> = ({ user, onCashierClick, onProfileCl
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <h1 className="text-lg font-black bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
-              BINGO BLAST
+            <h1 className="text-lg font-black bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent leading-tight">
+              BET BINGO CASH
             </h1>
           </motion.div>
         </div>

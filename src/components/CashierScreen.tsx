@@ -16,6 +16,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import PaymentModal from './PaymentModal';
 
 const CashierScreen: React.FC = () => {
   const { user, updateUser } = useAuth();
@@ -23,6 +24,7 @@ const CashierScreen: React.FC = () => {
   const [selectedMethod, setSelectedMethod] = useState<string>('');
   const [amount, setAmount] = useState<string>('');
   const [processing, setProcessing] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   const paymentMethods = [
     {
@@ -79,10 +81,21 @@ const CashierScreen: React.FC = () => {
     { type: 'deposit', amount: 25, method: 'PayPal', status: 'completed', time: '3 days ago' },
   ];
 
-  const handleDeposit = async () => {
+  const handleDepositClick = () => {
     if (!selectedMethod || !amount) return;
     
+    // Show payment modal for card payments
+    if (selectedMethod === 'credit-card') {
+      setShowPaymentModal(true);
+    } else {
+      // For other methods, process directly
+      processDeposit();
+    }
+  };
+
+  const processDeposit = () => {
     setProcessing(true);
+    setShowPaymentModal(false);
     
     // Simulate processing
     setTimeout(() => {
@@ -308,7 +321,7 @@ const CashierScreen: React.FC = () => {
 
           {/* Action Button */}
           <motion.button
-            onClick={activeTab === 'deposit' ? handleDeposit : handleWithdraw}
+            onClick={activeTab === 'deposit' ? handleDepositClick : handleWithdraw}
             disabled={!selectedMethod || !amount || processing}
             whileHover={{ scale: processing ? 1 : 1.02 }}
             whileTap={{ scale: processing ? 1 : 0.98 }}
@@ -409,6 +422,16 @@ const CashierScreen: React.FC = () => {
           </div>
         </div>
       </motion.div>
+
+      {/* Payment Modal */}
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        onSubmit={processDeposit}
+        amount={amount}
+        method={paymentMethods.find(m => m.id === selectedMethod)?.name || ''}
+        processing={processing}
+      />
     </div>
   );
 };

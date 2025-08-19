@@ -1,8 +1,8 @@
 {
-  "name": "bingo-blitz",
+  "name": "bet-bingo-cash",
   "private": true,
   "version": "1.0.0",
-  "description": "BingoBlitz: Win Real Rewards - Fast-paced bingo with power-ups and social features",
+  "description": "Bet Bingo Cash: Real Money Bingo - Professional gambling platform with cash prizes and jackpots",
   "type": "module",
   "scripts": {
     "dev": "vite",

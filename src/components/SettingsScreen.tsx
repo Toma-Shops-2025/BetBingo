@@ -36,10 +36,10 @@ const SettingsScreen: React.FC = () => {
         <div className="text-center mb-6">
           <div className="flex items-center justify-center gap-2 mb-2">
             <Sparkles className="w-6 h-6 text-yellow-400" />
-            <h1 className="text-3xl font-bold text-white">BingoBlitz</h1>
+            <h1 className="text-3xl font-bold text-white">Bet Bingo Cash</h1>
             <Sparkles className="w-6 h-6 text-yellow-400" />
           </div>
-          <p className="text-purple-200">⚡ Where speed meets strategy!</p>
+          <p className="text-purple-200">💰 Real Money • Real Wins</p>
           {user && (
             <p className="text-purple-300 text-sm mt-2">
               Signed in as: <span className="text-white font-medium">{user.username}</span>

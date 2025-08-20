@@ -23,10 +23,15 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     e.preventDefault()
     setLoading(true)
     try {
-      await signIn(email, password)
+      const { error } = await signIn(email, password)
+      if (error) {
+        console.error('Sign in error:', error)
+        // Handle error - you could show a toast or error message here
+        return
+      }
       onClose()
     } catch (error) {
-      // Error handled in context
+      console.error('Sign in error:', error)
     } finally {
       setLoading(false)
     }
@@ -36,10 +41,15 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     e.preventDefault()
     setLoading(true)
     try {
-      await signUp(email, password, username)
+      const { error } = await signUp(email, password, username)
+      if (error) {
+        console.error('Sign up error:', error)
+        // Handle error - you could show a toast or error message here
+        return
+      }
       onClose()
     } catch (error) {
-      // Error handled in context
+      console.error('Sign up error:', error)
     } finally {
       setLoading(false)
     }

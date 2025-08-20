@@ -58,12 +58,15 @@ const AppLayout: React.FC = () => {
         <PitchBlackBackground />
         
         <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6 }}
-            className="bg-gradient-to-br from-purple-800/40 via-blue-800/40 to-purple-800/40 backdrop-blur-xl rounded-3xl border border-purple-400/30 p-8 shadow-2xl"
-          >
+          <div className="flex items-center gap-8 max-w-6xl w-full">
+            {/* Left side - Login content */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6 }}
+              className="bg-gradient-to-br from-purple-800/40 via-blue-800/40 to-purple-800/40 backdrop-blur-xl rounded-3xl border border-purple-400/30 p-8 shadow-2xl flex-1 max-w-md"
+            >
+              {/* Login content stays the same */}
             {/* Logo */}
             <motion.div
               initial={{ opacity: 0, y: -20 }}
@@ -122,7 +125,37 @@ const AppLayout: React.FC = () => {
                 18+ only. Play responsibly. Call 1-800-GAMBLER for help.
               </p>
             </motion.div>
-          </motion.div>
+            </motion.div>
+
+            {/* Right side - Logo */}
+            <motion.div
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 0.4 }}
+              className="hidden lg:flex flex-1 justify-center items-center"
+            >
+              <div className="relative">
+                <motion.img
+                  src="/logo.png"
+                  alt="BetBingo Logo"
+                  className="w-80 h-80 object-contain drop-shadow-2xl"
+                  initial={{ scale: 0.8, rotate: -5 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ duration: 1, delay: 0.6 }}
+                />
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 1 }}
+                  className="absolute -bottom-4 left-1/2 transform -translate-x-1/2"
+                >
+                  <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-bold px-4 py-2 rounded-full text-sm shadow-lg">
+                    Win Real Cash!
+                  </div>
+                </motion.div>
+              </div>
+            </motion.div>
+          </div>
         </div>
 
         {/* Auth Modal */}

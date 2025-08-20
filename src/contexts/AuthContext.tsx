@@ -60,7 +60,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser] = useState<AuthUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isDemoMode, setIsDemoMode] = useState(true); // Set to true for demo mode
+  const [isDemoMode, setIsDemoMode] = useState(false); // Set to false for real authentication
 
   useEffect(() => {
     if (isDemoMode) {

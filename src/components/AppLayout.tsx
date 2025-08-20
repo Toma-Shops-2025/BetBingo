@@ -24,7 +24,7 @@ type ScreenType = 'lobby' | 'game' | 'cashier' | 'profile' | 'leaderboard' | 'se
 
 const AppLayout: React.FC = () => {
   const { gameState } = useGame();
-  const { user, isAuthenticated, login, register, logout } = useAuth();
+  const { user, signIn, signUp, signOut } = useAuth();
   const [activeScreen, setActiveScreen] = useState<ScreenType>('lobby');
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
@@ -52,7 +52,7 @@ const AppLayout: React.FC = () => {
     return <AnimatedLoadingScreen />;
   }
 
-  if (!isAuthenticated) {
+  if (!user) {
     return (
       <div className="min-h-screen relative overflow-hidden">
         <PitchBlackBackground />
@@ -129,9 +129,6 @@ const AppLayout: React.FC = () => {
         <AuthModal 
           isOpen={showAuthModal}
           onClose={() => setShowAuthModal(false)}
-          mode={authMode}
-          onLogin={login}
-          onRegister={register}
         />
       </div>
     );
@@ -140,9 +137,9 @@ const AppLayout: React.FC = () => {
   const renderScreen = () => {
     switch (activeScreen) {
       case 'lobby':
-        return <LobbyScreen />;
+        return <LobbyScreen onJoinGame={() => setActiveScreen('game')} />;
       case 'game':
-        return <GameScreen />;
+        return <GameScreen onExitGame={() => setActiveScreen('lobby')} />;
       case 'cashier':
         return <CashierScreen />;
       case 'profile':
@@ -185,7 +182,7 @@ const AppLayout: React.FC = () => {
           </div>
         );
       default:
-        return <LobbyScreen />;
+        return <LobbyScreen onJoinGame={() => setActiveScreen('game')} />;
     }
   };
 
@@ -217,8 +214,8 @@ const AppLayout: React.FC = () => {
         </main>
 
         <GamblingNavigation 
-          activeScreen={activeScreen}
-          onScreenChange={(screen: ScreenType) => setActiveScreen(screen)}
+          activeScreen={activeScreen as 'lobby' | 'game' | 'cashier' | 'profile' | 'leaderboard' | 'settings'}
+          onScreenChange={(screen) => setActiveScreen(screen as ScreenType)}
         />
 
         {/* Legal Compliance Footer */}

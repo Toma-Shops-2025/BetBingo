@@ -14,8 +14,16 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 export const supabase = createClient(
-  supabaseUrl || 'https://cppndnipdjkctrteudht.supabase.co',
-  supabaseAnonKey || 'demo-key-fallback'
+  supabaseUrl || 'https://nlyujvvgglcymygaxhhi.supabase.co',
+  supabaseAnonKey || 'demo-key-fallback',
+  {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true,
+      flowType: 'pkce',
+    }
+  }
 )
 
 export type { User, Session } from '@supabase/supabase-js'

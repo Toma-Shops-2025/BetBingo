@@ -22,12 +22,14 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string, username: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, username: string) => Promise<{ error: any; message?: string }>;
   signOut: () => Promise<void>;
   signInWithProvider: (provider: 'google' | 'github') => Promise<{ error: any }>;
   updateBalance: (amount: number) => Promise<void>;
   updateUser: (updates: Partial<AuthUser>) => void;
   claimBonus: () => Promise<void>;
+  resendConfirmationEmail: (email: string) => Promise<{ error: any }>;
+  resetPassword: (email: string) => Promise<{ error: any }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -60,7 +62,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser] = useState<AuthUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isDemoMode, setIsDemoMode] = useState(false); // Set to false for real authentication
+  const [isDemoMode, setIsDemoMode] = useState(true); // Set to true for demo mode during development
 
   useEffect(() => {
     if (isDemoMode) {
@@ -86,6 +88,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state change:', event, session);
       setSession(session);
       if (session?.user) {
         await fetchUserProfile(session.user.id);
@@ -167,6 +170,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       });
 
       if (error) {
+        console.error('Sign in error:', error);
         return { error };
       }
 
@@ -176,6 +180,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       return { error: null };
     } catch (error) {
+      console.error('Sign in error:', error);
       return { error };
     }
   };
@@ -192,18 +197,75 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            username: username,
+          },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
       });
 
       if (error) {
+        console.error('Sign up error:', error);
         return { error };
       }
 
-      if (data.user) {
+      if (data.user && !data.session) {
+        // Email confirmation required
+        return { 
+          error: null, 
+          message: 'Please check your email to confirm your account before signing in.' 
+        };
+      }
+
+      if (data.user && data.session) {
+        // Email confirmation not required, user is signed in
         await createDefaultProfile(data.user.id);
       }
 
       return { error: null };
     } catch (error) {
+      console.error('Sign up error:', error);
+      return { error };
+    }
+  };
+
+  const resendConfirmationEmail = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (error) {
+        console.error('Error resending confirmation email:', error);
+        return { error };
+      }
+
+      return { error: null };
+    } catch (error) {
+      console.error('Error resending confirmation email:', error);
+      return { error };
+    }
+  };
+
+  const resetPassword = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
+      });
+
+      if (error) {
+        console.error('Error sending password reset email:', error);
+        return { error };
+      }
+
+      return { error: null };
+    } catch (error) {
+      console.error('Error sending password reset email:', error);
       return { error };
     }
   };
@@ -314,6 +376,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         updateBalance,
         updateUser,
         claimBonus,
+        resendConfirmationEmail,
+        resetPassword,
       }}
     >
       {children}

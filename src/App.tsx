@@ -8,6 +8,8 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { GameProvider } from "@/contexts/GameContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import AuthCallback from "./pages/AuthCallback";
+import ResetPassword from "./pages/ResetPassword";
 import { ErrorBoundary } from "react-error-boundary";
 
 const queryClient = new QueryClient({
@@ -51,6 +53,8 @@ const App = () => (
               <BrowserRouter>
                 <Routes>
                   <Route path="/" element={<Index />} />
+                  <Route path="/auth/callback" element={<AuthCallback />} />
+                  <Route path="/auth/reset-password" element={<ResetPassword />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </BrowserRouter>

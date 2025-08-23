@@ -19,7 +19,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({ onJoinGame }) => {
       id: 'penny-bingo',
       name: 'Penny Bingo',
       description: 'Low stakes, high fun!',
-      entryFee: 0.25,
+      entryFee: 0.50,
       jackpot: 125.50,
       players: 45,
       maxPlayers: 75,

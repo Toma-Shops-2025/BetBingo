@@ -1,16 +1,25 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Home, CreditCard, User, Trophy, Settings, Play } from 'lucide-react';
+import { Home, CreditCard, User, Trophy, Settings, Play, MessageCircle } from 'lucide-react';
 
-type ScreenType = 'lobby' | 'game' | 'cashier' | 'profile' | 'leaderboard' | 'settings';
+type ScreenType = 'lobby' | 'game' | 'cashier' | 'profile' | 'leaderboard' | 'settings' | 'messages';
 
 interface GamblingNavigationProps {
   activeScreen: ScreenType;
   onScreenChange: (screen: ScreenType) => void;
+  notifications?: {
+    messages?: number;
+    cashier?: number;
+    leaderboard?: number;
+  };
 }
 
-const GamblingNavigation: React.FC<GamblingNavigationProps> = ({ activeScreen, onScreenChange }) => {
-  const navItems: Array<{id: ScreenType, label: string, icon: any, gradient: string}> = [
+const GamblingNavigation: React.FC<GamblingNavigationProps> = ({ 
+  activeScreen, 
+  onScreenChange, 
+  notifications = {} 
+}) => {
+  const navItems: Array<{id: ScreenType, label: string, icon: any, gradient: string, notificationKey?: keyof typeof notifications}> = [
     { 
       id: 'lobby', 
       label: 'Lobby', 
@@ -24,16 +33,25 @@ const GamblingNavigation: React.FC<GamblingNavigationProps> = ({ activeScreen, o
       gradient: 'from-green-500 to-emerald-500'
     },
     { 
+      id: 'messages', 
+      label: 'Messages', 
+      icon: MessageCircle,
+      gradient: 'from-blue-500 to-indigo-500',
+      notificationKey: 'messages'
+    },
+    { 
       id: 'cashier', 
       label: 'Cashier', 
       icon: CreditCard,
-      gradient: 'from-yellow-500 to-orange-500'
+      gradient: 'from-yellow-500 to-orange-500',
+      notificationKey: 'cashier'
     },
     { 
       id: 'leaderboard', 
       label: 'Leaderboard', 
       icon: Trophy,
-      gradient: 'from-purple-500 to-pink-500'
+      gradient: 'from-purple-500 to-pink-500',
+      notificationKey: 'leaderboard'
     },
     { 
       id: 'profile', 
@@ -63,6 +81,7 @@ const GamblingNavigation: React.FC<GamblingNavigationProps> = ({ activeScreen, o
         {navItems.map((item, index) => {
           const Icon = item.icon;
           const isActive = activeScreen === item.id;
+          const hasNotification = notifications[item.notificationKey || ''] > 0;
           
           return (
             <motion.button
@@ -152,20 +171,16 @@ const GamblingNavigation: React.FC<GamblingNavigationProps> = ({ activeScreen, o
                 </div>
               )}
 
-              {/* Special indicator for Play button */}
-              {item.id === 'game' && !isActive && (
+              {/* Notification dot */}
+              {hasNotification && (
                 <motion.div
-                  className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-red-500 to-red-600 rounded-full"
-                  animate={{
-                    scale: [1, 1.2, 1],
-                    opacity: [0.7, 1, 0.7]
-                  }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
-                />
+                  className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-xs font-bold text-white"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                >
+                  {notifications[item.notificationKey || '']}
+                </motion.div>
               )}
             </motion.button>
           );

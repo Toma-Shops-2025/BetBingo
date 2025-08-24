@@ -32,6 +32,27 @@ const AppLayout: React.FC = () => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [isLoading, setIsLoading] = useState(true);
+  const [notifications, setNotifications] = useState({
+    messages: 0,
+    cashier: 0,
+    leaderboard: 0
+  });
+
+  // Demo notification system - for testing purposes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Randomly add notifications every 10 seconds (for demo)
+      if (Math.random() < 0.3) {
+        const notificationType = ['messages', 'cashier', 'leaderboard'][Math.floor(Math.random() * 3)] as keyof typeof notifications;
+        setNotifications(prev => ({
+          ...prev,
+          [notificationType]: prev[notificationType] + 1
+        }));
+      }
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -49,6 +70,19 @@ const AppLayout: React.FC = () => {
   const handleRegister = () => {
     setAuthMode('register');
     setShowAuthModal(true);
+  };
+
+  const handleScreenChange = (screen: ScreenType) => {
+    setActiveScreen(screen);
+    
+    // Clear notifications when navigating to screens that have them
+    if (screen === 'messages' && notifications.messages > 0) {
+      setNotifications(prev => ({ ...prev, messages: 0 }));
+    } else if (screen === 'cashier' && notifications.cashier > 0) {
+      setNotifications(prev => ({ ...prev, cashier: 0 }));
+    } else if (screen === 'leaderboard' && notifications.leaderboard > 0) {
+      setNotifications(prev => ({ ...prev, leaderboard: 0 }));
+    }
   };
 
   if (isLoading) {
@@ -210,7 +244,7 @@ const AppLayout: React.FC = () => {
           user={user}
           onCashierClick={() => setActiveScreen('cashier')}
           onProfileClick={() => setActiveScreen('profile')}
-          onScreenChange={(screen) => setActiveScreen(screen as ScreenType)}
+          onScreenChange={(screen) => handleScreenChange(screen as ScreenType)}
         />
         
         <main className="flex-1 overflow-y-auto">
@@ -229,8 +263,9 @@ const AppLayout: React.FC = () => {
         </main>
 
         <GamblingNavigation 
-          activeScreen={activeScreen as 'lobby' | 'game' | 'cashier' | 'profile' | 'leaderboard' | 'settings'}
-          onScreenChange={(screen) => setActiveScreen(screen as ScreenType)}
+          activeScreen={activeScreen as 'lobby' | 'game' | 'cashier' | 'profile' | 'leaderboard' | 'settings' | 'messages'}
+          onScreenChange={(screen) => handleScreenChange(screen as ScreenType)}
+          notifications={notifications}
         />
 
         {/* Legal Compliance Footer */}

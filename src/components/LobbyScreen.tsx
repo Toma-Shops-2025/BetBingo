@@ -114,10 +114,15 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({ onJoinGame }) => {
       return;
     }
 
-    // Confirm joining the room
+    // Show detailed confirmation with balance info
+    const currentBalance = user.balance;
+    const newBalance = currentBalance - room.entryFee;
+    
     const confirmJoin = window.confirm(
       `Join ${room.name}?\n\n` +
       `Entry Fee: $${room.entryFee.toFixed(2)}\n` +
+      `Current Balance: $${currentBalance.toFixed(2)}\n` +
+      `Balance After: $${newBalance.toFixed(2)}\n` +
       `Jackpot: $${room.jackpot.toLocaleString()}\n` +
       `Difficulty: ${room.difficulty}\n\n` +
       `Are you sure you want to join?`
@@ -130,14 +135,21 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({ onJoinGame }) => {
     try {
       setSelectedRoom(room.id);
       
-      // Start the match
+      // Show loading message
+      const loadingMsg = `Joining ${room.name}...\nDeducting $${room.entryFee.toFixed(2)} from your balance.`;
+      console.log(loadingMsg);
+      
+      // Start the match (this will deduct the entry fee)
       await startMatch(false, room.entryFee);
+      
+      // Show success message
+      alert(`Successfully joined ${room.name}!\nEntry fee of $${room.entryFee.toFixed(2)} has been deducted.\nGood luck!`);
       
       // Navigate to game
       onJoinGame();
     } catch (error) {
       console.error('Failed to join room:', error);
-      alert(`Failed to join ${room.name}. Please try again.`);
+      alert(`Failed to join ${room.name}: ${error.message || 'Unknown error'}`);
       
       // Reset selection
       setSelectedRoom(null);
@@ -160,6 +172,24 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({ onJoinGame }) => {
           <PWAInstallButton />
         </div>
         <p className="text-purple-300 text-lg">Choose your room and start winning!</p>
+        
+        {/* Current Balance Display */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.4 }}
+          className="mt-4 inline-block bg-gradient-to-r from-green-600/30 to-emerald-600/30 border-2 border-green-400/40 rounded-2xl p-4 backdrop-blur-md"
+        >
+          <div className="flex items-center space-x-3">
+            <div className="bg-green-500/30 rounded-xl p-2">
+              <DollarSign className="w-6 h-6 text-green-400" />
+            </div>
+            <div className="text-center">
+              <p className="text-green-300 text-sm font-semibold">Current Balance</p>
+              <p className="text-green-400 text-2xl font-black">${user.balance.toFixed(2)}</p>
+            </div>
+          </div>
+        </motion.div>
       </motion.div>
 
       {/* Quick Stats */}
@@ -308,6 +338,13 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({ onJoinGame }) => {
                 >
                   🎮 JOIN GAME
                 </button>
+                
+                {/* Entry Fee Warning */}
+                <div className="mt-2 text-center">
+                  <p className="text-xs text-yellow-300 font-semibold">
+                    ⚠️ Entry fee of ${room.entryFee.toFixed(2)} will be deducted from your balance
+                  </p>
+                </div>
               </div>
 
               {/* Glow effect */}

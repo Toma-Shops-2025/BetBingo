@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, useState, ReactNode, useEffect } from 'react';
 
 // Types
 interface Player {
@@ -147,6 +147,22 @@ export const useGame = () => {
 export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [gameState, dispatch] = useReducer(gameReducer, initialState);
   const [gameStats, setGameStats] = useState<GameStats>(initialStats);
+  const [updateUser, setUpdateUser] = useState<any>(null);
+
+  // Get the updateUser function from AuthContext
+  useEffect(() => {
+    const getUpdateUser = async () => {
+      try {
+        const { useAuth } = await import('./AuthContext');
+        const authContext = useAuth();
+        setUpdateUser(() => authContext.updateUser);
+      } catch (error) {
+        console.warn('Auth context not available for balance updates');
+      }
+    };
+    
+    getUpdateUser();
+  }, []);
 
   // Generate bingo card
   const generateBingoCard = (): number[][] => {
@@ -249,8 +265,23 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       // Deduct entry fee for real money games
       if (!isPractice) {
-        // In a real app, this would update the user's balance in the database
-        console.log(`Deducting $${entryFee.toFixed(2)} entry fee from user balance`);
+        try {
+          // Actually deduct the entry fee from user's balance
+          const newBalance = user.balance - entryFee;
+          
+          // Update the user's balance in the AuthContext
+          if (updateUser) {
+            await updateUser({ balance: newBalance });
+          }
+          
+          console.log(`Successfully deducted $${entryFee.toFixed(2)} entry fee. New balance: $${newBalance.toFixed(2)}`);
+          
+          // Update the local user object for the match
+          user.balance = newBalance;
+        } catch (error) {
+          console.error('Failed to deduct entry fee:', error);
+          throw new Error(`Failed to deduct entry fee. Please try again.`);
+        }
       }
 
       const playerCard = generateBingoCard();

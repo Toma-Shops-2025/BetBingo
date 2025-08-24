@@ -15,6 +15,7 @@ import TermsOfServiceScreen from './TermsOfServiceScreen';
 import ResponsibleGamingScreen from './ResponsibleGamingScreen';
 import ContactScreen from './ContactScreen';
 import FAQScreen from './FAQScreen';
+import MessagesScreen from './MessagesScreen';
 import AuthModal from './AuthModal';
 import { PitchBlackBackground } from './ModernBackgrounds';
 import GamblingNavigation from './GamblingNavigation';
@@ -22,7 +23,7 @@ import TopHeader from './TopHeader';
 import AnimatedLoadingScreen from './AnimatedLoadingScreen';
 import PWAInstallPrompt from './PWAInstallPrompt';
 
-type ScreenType = 'lobby' | 'game' | 'cashier' | 'profile' | 'leaderboard' | 'settings' | 'privacy' | 'terms' | 'faq' | 'contact' | 'responsible';
+type ScreenType = 'lobby' | 'game' | 'cashier' | 'profile' | 'leaderboard' | 'settings' | 'privacy' | 'terms' | 'faq' | 'contact' | 'responsible' | 'messages';
 
 const AppLayout: React.FC = () => {
   const { gameState } = useGame();
@@ -193,6 +194,8 @@ const AppLayout: React.FC = () => {
         return <ContactScreen onBack={() => setActiveScreen('lobby')} />;
       case 'faq':
         return <FAQScreen onBack={() => setActiveScreen('lobby')} />;
+      case 'messages':
+        return <MessagesScreen onBack={() => setActiveScreen('lobby')} />;
       default:
         return <LobbyScreen onJoinGame={() => setActiveScreen('game')} />;
     }
@@ -273,6 +276,13 @@ const AppLayout: React.FC = () => {
               className="text-blue-400 hover:text-blue-300 underline"
             >
               FAQ
+            </button>
+            <span>•</span>
+            <button 
+              onClick={() => setActiveScreen('messages')}
+              className="text-blue-400 hover:text-blue-300 underline"
+            >
+              Messages
             </button>
             <span>•</span>
             <a 

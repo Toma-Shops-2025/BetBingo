@@ -7,7 +7,6 @@ import { Badge } from '@/components/ui/badge';
 import { 
   DollarSign, 
   CreditCard, 
-  Paypal, 
   Banknote, 
   Bitcoin, 
   ArrowUpRight, 
@@ -42,7 +41,7 @@ const CashierScreen: React.FC = () => {
     {
       id: 'paypal',
       name: 'PayPal',
-      icon: Paypal,
+      icon: CreditCard,
       description: 'Fast & secure',
       minDeposit: 5,
       maxDeposit: 2500,

@@ -16,7 +16,8 @@ import {
   Volume2,
   VolumeX,
   Pause,
-  Play
+  Play,
+  Target
 } from 'lucide-react';
 import { useGame } from '@/contexts/GameContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -162,6 +163,25 @@ const GameScreen: React.FC<GameScreenProps> = ({ onExitGame }) => {
         </div>
 
         <div className="relative z-10 p-4 space-y-4">
+          {/* Practice Mode Indicator */}
+          {gameState.currentMatch && gameState.currentMatch.entryFee === 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-gradient-to-r from-green-600/30 to-emerald-600/30 border-2 border-green-400/40 rounded-2xl p-4 backdrop-blur-md text-center"
+            >
+              <div className="flex items-center justify-center space-x-3">
+                <div className="p-2 bg-green-500/30 rounded-lg">
+                  <Target className="w-6 h-6 text-green-400" />
+                </div>
+                <div>
+                  <h3 className="text-green-300 text-xl font-bold">🎯 PRACTICE MODE</h3>
+                  <p className="text-green-200 text-sm">No real money at stake - perfect for learning!</p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
           {/* Top Game Info Bar */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -257,6 +277,20 @@ const GameScreen: React.FC<GameScreenProps> = ({ onExitGame }) => {
                 <div>
                   <h3 className="text-orange-300 font-bold text-lg">Win Pattern: {currentGame.pattern}</h3>
                   <p className="text-orange-400 text-sm">Get a full house to win the round!</p>
+                  
+                  {/* Game Mode Info */}
+                  {gameState.currentMatch && (
+                    <div className="mt-2 text-xs">
+                      {gameState.currentMatch.entryFee === 0 ? (
+                        <span className="text-green-400 font-semibold">🎯 Practice Mode - No Entry Fee</span>
+                      ) : (
+                        <span className="text-yellow-400 font-semibold">
+                          💰 Entry Fee: ${gameState.currentMatch.entryFee.toFixed(2)} | 
+                          Prize Pool: ${gameState.currentMatch.prizePool.toFixed(2)}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
               
@@ -361,7 +395,41 @@ const GameScreen: React.FC<GameScreenProps> = ({ onExitGame }) => {
           />
 
           {/* Balance Display */}
-          <AnimatedMoneyDisplay amount={user.balance} />
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="bg-gradient-to-r from-blue-600/20 to-cyan-600/20 border-2 border-blue-400/40 rounded-2xl p-4 backdrop-blur-md"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="bg-blue-500/30 rounded-xl p-3">
+                  <DollarSign className="w-6 h-6 text-blue-400" />
+                </div>
+                <div>
+                  <h3 className="text-blue-300 font-bold text-lg">Your Balance</h3>
+                  <p className="text-blue-400 text-sm">Current funds available</p>
+                </div>
+              </div>
+              
+              <div className="text-right">
+                <div className="text-blue-300 text-2xl font-black">
+                  ${user.balance.toFixed(2)}
+                </div>
+                <p className="text-blue-400 text-sm">Available</p>
+                
+                {/* Show entry fee if applicable */}
+                {gameState.currentMatch && gameState.currentMatch.entryFee > 0 && (
+                  <div className="mt-1">
+                    <div className="text-red-400 text-lg font-bold">
+                      -${gameState.currentMatch.entryFee.toFixed(2)}
+                    </div>
+                    <p className="text-red-400 text-xs">Entry Fee</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </motion.div>
         </div>
 
         {/* Chat System */}
@@ -381,6 +449,107 @@ const GameScreen: React.FC<GameScreenProps> = ({ onExitGame }) => {
 
         {/* Confetti */}
         {showConfetti && <AnimatedConfetti isActive={showConfetti} />}
+
+        {/* Game Completion Modal */}
+        <AnimatePresence>
+          {gameState.gameStatus === 'won' && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            >
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                className="bg-gradient-to-br from-green-800/90 via-emerald-800/90 to-green-800/90 backdrop-blur-xl border border-green-400/30 rounded-2xl p-8 max-w-md w-full text-center"
+              >
+                <div className="text-6xl mb-4">🎉</div>
+                <h3 className="text-white text-2xl font-bold mb-4">Congratulations!</h3>
+                <p className="text-green-200 text-lg mb-6">You won the game!</p>
+                
+                {gameState.currentMatch && gameState.currentMatch.entryFee === 0 ? (
+                  <div className="bg-green-600/30 rounded-xl p-4 mb-6">
+                    <p className="text-green-300 font-semibold">🎯 Practice Mode</p>
+                    <p className="text-green-200 text-sm">Great job! This was a practice game.</p>
+                  </div>
+                ) : (
+                  <div className="bg-yellow-600/30 rounded-xl p-4 mb-6">
+                    <p className="text-yellow-300 font-semibold">💰 Real Money Win!</p>
+                    <p className="text-yellow-200 text-sm">
+                      Prize: ${gameState.currentMatch?.prizePool.toFixed(2)}
+                    </p>
+                  </div>
+                )}
+                
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-3 px-4 rounded-xl transition-all"
+                  >
+                    Play Again
+                  </button>
+                  <button
+                    onClick={onExitGame}
+                    className="flex-1 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-bold py-3 px-4 rounded-xl transition-all"
+                  >
+                    Back to Lobby
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+
+          {gameState.gameStatus === 'lost' && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            >
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                className="bg-gradient-to-br from-red-800/90 via-pink-800/90 to-red-800/90 backdrop-blur-xl border border-red-400/30 rounded-2xl p-8 max-w-md w-full text-center"
+              >
+                <div className="text-6xl mb-4">😔</div>
+                <h3 className="text-white text-2xl font-bold mb-4">Game Over</h3>
+                <p className="text-red-200 text-lg mb-6">Better luck next time!</p>
+                
+                {gameState.currentMatch && gameState.currentMatch.entryFee === 0 ? (
+                  <div className="bg-red-600/30 rounded-xl p-4 mb-6">
+                    <p className="text-red-300 font-semibold">🎯 Practice Mode</p>
+                    <p className="text-red-200 text-sm">No money lost - keep practicing!</p>
+                  </div>
+                ) : (
+                  <div className="bg-red-600/30 rounded-xl p-4 mb-6">
+                    <p className="text-red-300 font-semibold">💰 Entry Fee Lost</p>
+                    <p className="text-red-200 text-sm">
+                      Entry fee: ${gameState.currentMatch?.entryFee.toFixed(2)}
+                    </p>
+                  </div>
+                )}
+                
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="flex-1 bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white font-bold py-3 px-4 rounded-xl transition-all"
+                  >
+                    Try Again
+                  </button>
+                  <button
+                    onClick={onExitGame}
+                    className="flex-1 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-bold py-3 px-4 rounded-xl transition-all"
+                  >
+                    Back to Lobby
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Exit Confirmation Modal */}

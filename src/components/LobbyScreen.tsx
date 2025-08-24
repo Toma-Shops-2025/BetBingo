@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Users, Clock, DollarSign, Trophy, Star, Zap, Crown, Flame, Shield, Gift } from 'lucide-react';
+import { Users, Clock, DollarSign, Trophy, Star, Zap, Crown, Flame, Shield, Gift, Target, Sparkles } from 'lucide-react';
 import { useGame } from '@/contexts/GameContext';
 import { useAuth } from '@/contexts/AuthContext';
 import PWAInstallButton from './PWAInstallButton';
@@ -108,14 +108,40 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({ onJoinGame }) => {
   ];
 
   const handleJoinRoom = async (room: any) => {
+    // Check if user has sufficient balance
     if (user.balance < room.entryFee) {
       alert(`Insufficient balance! You need $${room.entryFee.toFixed(2)} to join this room.`);
       return;
     }
 
-    setSelectedRoom(room.id);
-    await startMatch(false, room.entryFee);
-    onJoinGame();
+    // Confirm joining the room
+    const confirmJoin = window.confirm(
+      `Join ${room.name}?\n\n` +
+      `Entry Fee: $${room.entryFee.toFixed(2)}\n` +
+      `Jackpot: $${room.jackpot.toLocaleString()}\n` +
+      `Difficulty: ${room.difficulty}\n\n` +
+      `Are you sure you want to join?`
+    );
+
+    if (!confirmJoin) {
+      return;
+    }
+
+    try {
+      setSelectedRoom(room.id);
+      
+      // Start the match
+      await startMatch(false, room.entryFee);
+      
+      // Navigate to game
+      onJoinGame();
+    } catch (error) {
+      console.error('Failed to join room:', error);
+      alert(`Failed to join ${room.name}. Please try again.`);
+      
+      // Reset selection
+      setSelectedRoom(null);
+    }
   };
 
   return (
@@ -274,6 +300,16 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({ onJoinGame }) => {
                 </div>
               </div>
 
+              {/* Join Game Button */}
+              <div className="mt-4">
+                <button
+                  onClick={() => handleJoinRoom(room)}
+                  className={`w-full bg-gradient-to-r ${room.color} hover:brightness-110 text-white font-bold py-3 px-6 rounded-xl transition-all transform hover:scale-105 shadow-lg`}
+                >
+                  🎮 JOIN GAME
+                </button>
+              </div>
+
               {/* Glow effect */}
               <div className={`absolute inset-0 bg-gradient-to-r ${room.color} rounded-2xl blur-xl opacity-20 -z-10`}></div>
             </motion.div>
@@ -281,31 +317,63 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({ onJoinGame }) => {
         })}
       </div>
 
-      {/* Practice Mode */}
+      {/* Practice Mode - Prominent Section */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1 }}
-        className="bg-gradient-to-r from-gray-600/20 to-gray-700/20 border border-gray-400/30 rounded-2xl p-4 backdrop-blur-md"
+        transition={{ delay: 0.8 }}
+        className="bg-gradient-to-r from-green-600/30 to-emerald-600/30 border-2 border-green-400/40 rounded-2xl p-6 backdrop-blur-md relative overflow-hidden"
       >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="p-3 bg-gradient-to-r from-gray-500 to-gray-600 rounded-xl">
-              <Shield className="w-6 h-6 text-white" />
+        {/* Background glow */}
+        <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-emerald-500/10 blur-xl"></div>
+        
+        <div className="relative z-10">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-4">
+              <div className="p-4 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl shadow-lg">
+                <Target className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <h3 className="text-white text-2xl font-black">🎯 PRACTICE MODE</h3>
+                <p className="text-green-200 text-lg">Learn the game for FREE!</p>
+                <div className="flex items-center space-x-4 mt-2 text-sm">
+                  <span className="text-green-300">
+                    <Users className="w-4 h-4 inline mr-1" />
+                    vs AI Opponent
+                  </span>
+                  <span className="text-green-300">
+                    <Clock className="w-4 h-4 inline mr-1" />
+                    30s Rounds
+                  </span>
+                  <span className="text-green-300">
+                    <Sparkles className="w-4 h-4 inline mr-1" />
+                    All Power-ups
+                  </span>
+                </div>
+              </div>
             </div>
-            <div>
-              <h3 className="text-white text-lg font-bold">Practice Mode</h3>
-              <p className="text-gray-300 text-sm">Play for free to learn the game</p>
+            
+            <div className="text-right">
+              <div className="text-green-300 text-3xl font-black">FREE</div>
+              <p className="text-green-200 text-sm">No Entry Fee</p>
+              <div className="text-green-300 text-lg font-bold mt-2">$0.00</div>
+              <p className="text-green-200 text-xs">Prize Pool</p>
             </div>
           </div>
+          
           <button
-            onClick={() => {
-              startMatch(true);
-              onJoinGame();
+            onClick={async () => {
+              try {
+                await startMatch(true, 0);
+                onJoinGame();
+              } catch (error) {
+                console.error('Failed to start practice mode:', error);
+                alert('Failed to start practice mode. Please try again.');
+              }
             }}
-            className="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-bold px-6 py-2 rounded-xl transition-all"
+            className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-4 px-8 rounded-xl transition-all text-lg shadow-lg hover:shadow-xl transform hover:scale-105"
           >
-            Play Free
+            🚀 START PRACTICE GAME
           </button>
         </div>
       </motion.div>

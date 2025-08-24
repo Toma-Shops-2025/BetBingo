@@ -237,13 +237,20 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       if (!user) {
         console.warn('No user available, cannot start match');
-        return;
+        throw new Error('No user available');
       }
 
       // For cash games, check if user has enough balance
       if (!isPractice && user.balance < entryFee) {
-        alert('Insufficient balance. Please add funds to your wallet.');
-        return;
+        const errorMsg = `Insufficient balance. You need $${entryFee.toFixed(2)} but only have $${user.balance.toFixed(2)}.`;
+        console.error(errorMsg);
+        throw new Error(errorMsg);
+      }
+
+      // Deduct entry fee for real money games
+      if (!isPractice) {
+        // In a real app, this would update the user's balance in the database
+        console.log(`Deducting $${entryFee.toFixed(2)} entry fee from user balance`);
       }
 
       const playerCard = generateBingoCard();
@@ -287,6 +294,13 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         createdAt: new Date().toISOString(),
       };
 
+      console.log(`Starting ${isPractice ? 'practice' : 'real money'} match:`, {
+        isPractice,
+        entryFee: match.entryFee,
+        prizePool: match.prizePool,
+        players: match.players.length
+      });
+
       dispatch({
         type: 'START_MATCH',
         payload: {
@@ -300,6 +314,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       startNumberCalling();
     } catch (error) {
       console.error('Error starting match:', error);
+      throw error; // Re-throw to let calling component handle it
     }
   };
 

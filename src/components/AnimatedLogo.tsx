@@ -38,7 +38,7 @@ const AnimatedLogo: React.FC = () => {
           animate={{ x: 0, opacity: 1 }}
           transition={{ delay: 0.3, duration: 0.6 }}
         >
-          BingoBlitz
+          BetBingo
         </motion.h1>
 
         {/* Right sparkle */}

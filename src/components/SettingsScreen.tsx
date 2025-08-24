@@ -4,17 +4,14 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Settings, Volume2, Bell, Shield, Palette, Globe, LogOut, Sparkles } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { Bell, Volume2, Shield, Palette, Smartphone, Globe, User, LogOut, Trash2 } from 'lucide-react';
 
 const SettingsScreen: React.FC = () => {
-  const { signOut, user } = useAuth();
+  const { user, signOut, isDemoMode, setIsDemoMode } = useAuth();
   const [settings, setSettings] = useState({
-    soundEnabled: true,
     notifications: true,
-    autoMark: false,
-    theme: 'auto',
-    language: 'en',
+    sound: true,
     privacyMode: false
   });
 
@@ -173,6 +170,33 @@ const SettingsScreen: React.FC = () => {
           </CardContent>
         </Card>
 
+        {/* Authentication */}
+        <Card className="bg-white/10 backdrop-blur-md border-white/20 mb-6">
+          <CardHeader>
+            <CardTitle className="text-white">Authentication</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label htmlFor="demo-mode" className="text-white">Demo Mode</Label>
+                <p className="text-purple-300 text-sm">Use demo authentication for testing</p>
+              </div>
+              <Switch
+                id="demo-mode"
+                checked={isDemoMode}
+                onCheckedChange={setIsDemoMode}
+              />
+            </div>
+            {isDemoMode && (
+              <div className="bg-yellow-900/30 border border-yellow-500/30 rounded-lg p-3">
+                <p className="text-yellow-200 text-sm">
+                  Demo mode is enabled. You can sign up with any email/password for testing.
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Account Actions */}
         <Card className="bg-white/10 backdrop-blur-md border-white/20 mb-6">
           <CardHeader>
@@ -194,7 +218,7 @@ const SettingsScreen: React.FC = () => {
         <Card className="bg-white/10 backdrop-blur-md border-white/20">
           <CardContent className="text-center py-4">
             <p className="text-purple-300 text-sm">
-              BingoBlitz v1.0.0
+              BetBingo v1.0.0
             </p>
             <p className="text-purple-400 text-xs mt-1">
               ⚡ Fast-paced bingo with power-ups

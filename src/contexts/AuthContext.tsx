@@ -21,15 +21,14 @@ interface AuthContextType {
   user: AuthUser | null;
   session: Session | null;
   loading: boolean;
+  isDemoMode: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, username: string) => Promise<{ error: any; message?: string }>;
   signOut: () => Promise<void>;
   signInWithProvider: (provider: 'google' | 'github') => Promise<{ error: any }>;
-  updateBalance: (amount: number) => Promise<void>;
-  updateUser: (updates: Partial<AuthUser>) => void;
-  claimBonus: () => Promise<void>;
   resendConfirmationEmail: (email: string) => Promise<{ error: any }>;
   resetPassword: (email: string) => Promise<{ error: any }>;
+  setIsDemoMode: (enabled: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -45,7 +44,7 @@ export const useAuth = () => {
 // Demo user for testing without Supabase
 const demoUser: AuthUser = {
   id: 'demo-user-123',
-  email: 'demo@bingoblitz.com',
+        email: 'demo@betbingo.live',
   username: 'DemoPlayer',
   balance: 100.00,
   bonus: 25.00,
@@ -188,9 +187,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const signUp = async (email: string, password: string, username: string) => {
     if (isDemoMode) {
       // Demo mode - simulate successful sign up
-      const newDemoUser = { ...demoUser, email, username };
-      setUser(newDemoUser);
-      return { error: null };
+      console.log('Demo mode: Creating demo user account')
+      const newDemoUser = { 
+        ...demoUser, 
+        id: `demo-${Date.now()}`,
+        email, 
+        username 
+      }
+      setUser(newDemoUser)
+      return { error: null, message: 'Demo account created successfully!' }
     }
 
     try {
@@ -364,23 +369,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        session,
-        loading,
-        signIn,
-        signUp,
-        signOut,
-        signInWithProvider,
-        updateBalance,
-        updateUser,
-        claimBonus,
-        resendConfirmationEmail,
-        resetPassword,
-      }}
-    >
+    <AuthContext.Provider value={{
+      user,
+      session,
+      loading,
+      isDemoMode,
+      signIn,
+      signUp,
+      signOut,
+      signInWithProvider,
+      resendConfirmationEmail,
+      resetPassword,
+      setIsDemoMode,
+    }}>
       {children}
     </AuthContext.Provider>
-  );
+  )
 };

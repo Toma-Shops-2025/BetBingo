@@ -65,11 +65,34 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Validate form fields
+    if (!email || !password || !username) {
+      setError('Please fill in all fields')
+      return
+    }
+    
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long')
+      return
+    }
+    
     setLoading(true)
     clearMessages()
     
+    // Add timeout to prevent getting stuck
+    const timeoutId = setTimeout(() => {
+      setLoading(false)
+      setError('Request timed out. Please try again.')
+    }, 30000) // 30 second timeout
+    
     try {
+      console.log('Starting sign up process...')
       const { error, message } = await signUp(email, password, username)
+      
+      // Clear timeout since we got a response
+      clearTimeout(timeoutId)
+      
       if (error) {
         console.error('Sign up error:', error)
         setError(error.message || 'An error occurred during sign up.')
@@ -90,6 +113,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       console.error('Sign up error:', error)
       setError('An unexpected error occurred. Please try again.')
     } finally {
+      clearTimeout(timeoutId)
       setLoading(false)
     }
   }
@@ -174,10 +198,10 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         <DialogHeader className="text-center">
           <div className="flex items-center justify-center gap-2 mb-2">
             <Sparkles className="w-6 h-6 text-yellow-400" />
-            <DialogTitle className="text-2xl font-bold text-white">BingoBlitz</DialogTitle>
+            <DialogTitle className="text-2xl font-bold text-white">BetBingo</DialogTitle>
             <Sparkles className="w-6 h-6 text-yellow-400" />
           </div>
-          <p id="auth-modal-description" className="text-purple-200 text-sm">⚡ Where speed meets strategy!</p>
+          <p id="auth-modal-description" className="text-purple-200 text-sm">💰 Where speed meets strategy!</p>
         </DialogHeader>
 
         {/* Error and Success Messages */}

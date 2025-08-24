@@ -20,9 +20,22 @@ import {
   User,
   Gamepad2,
   Trophy,
-  DollarSign
+  DollarSign,
+  Block,
+  Flag,
+  Trash2,
+  Volume2,
+  VolumeX,
+  UserMinus
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface MessagesScreenProps {
   onBack: () => void;
@@ -56,6 +69,38 @@ const MessagesScreen: React.FC<MessagesScreenProps> = ({ onBack }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedChat, setSelectedChat] = useState<ChatRoom | null>(null);
   const [newMessage, setNewMessage] = useState('');
+  const [showChatMenu, setShowChatMenu] = useState(false);
+
+  // Chat menu functions
+  const handleBlockUser = () => {
+    // TODO: Implement block user functionality
+    console.log('Blocking user:', selectedChat?.name);
+    setShowChatMenu(false);
+  };
+
+  const handleReportUser = () => {
+    // TODO: Implement report user functionality
+    console.log('Reporting user:', selectedChat?.name);
+    setShowChatMenu(false);
+  };
+
+  const handleClearChat = () => {
+    // TODO: Implement clear chat functionality
+    console.log('Clearing chat with:', selectedChat?.name);
+    setShowChatMenu(false);
+  };
+
+  const handleMuteUser = () => {
+    // TODO: Implement mute user functionality
+    console.log('Muting user:', selectedChat?.name);
+    setShowChatMenu(false);
+  };
+
+  const handleRemoveUser = () => {
+    // TODO: Implement remove user functionality
+    console.log('Removing user:', selectedChat?.name);
+    setShowChatMenu(false);
+  };
 
   // Mock data for messages and notifications
   const [notifications, setNotifications] = useState<Message[]>([
@@ -273,9 +318,58 @@ const MessagesScreen: React.FC<MessagesScreenProps> = ({ onBack }) => {
               </div>
             </div>
           </div>
-          <Button variant="ghost" size="sm">
-            <MoreVertical className="w-4 h-4 text-purple-300" />
-          </Button>
+          <DropdownMenu open={showChatMenu} onOpenChange={setShowChatMenu}>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => setShowChatMenu(!showChatMenu)}
+              >
+                <MoreVertical className="w-4 h-4 text-purple-300" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent 
+              align="end" 
+              className="w-48 bg-gray-800 border-gray-700 text-white"
+            >
+              <DropdownMenuItem 
+                onClick={handleMuteUser}
+                className="flex items-center space-x-2 cursor-pointer hover:bg-gray-700 focus:bg-gray-700"
+              >
+                <Volume2 className="w-4 h-4" />
+                <span>Mute User</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={handleBlockUser}
+                className="flex items-center space-x-2 cursor-pointer hover:bg-gray-700 focus:bg-gray-700"
+              >
+                <Block className="w-4 h-4" />
+                <span>Block User</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={handleReportUser}
+                className="flex items-center space-x-2 cursor-pointer hover:bg-gray-700 focus:bg-gray-700"
+              >
+                <Flag className="w-4 h-4" />
+                <span>Report User</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator className="bg-gray-600" />
+              <DropdownMenuItem 
+                onClick={handleClearChat}
+                className="flex items-center space-x-2 cursor-pointer hover:bg-gray-700 focus:bg-gray-700"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Clear Chat</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={handleRemoveUser}
+                className="flex items-center space-x-2 cursor-pointer hover:bg-gray-700 focus:bg-gray-700 text-red-400 hover:text-red-300"
+              >
+                <UserMinus className="w-4 h-4" />
+                <span>Remove User</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {/* Chat Messages */}

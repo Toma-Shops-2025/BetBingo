@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, CreditCard, Lock, Calendar, Shield, AlertCircle } from 'lucide-react';
+import { X, CreditCard, Lock, Calendar, Shield, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { 
@@ -8,7 +8,8 @@ import {
   validatePaymentAmount, 
   formatCurrency, 
   getCardBrand,
-  isStripeAvailable 
+  isStripeAvailable,
+  PAYMENT_CONFIG
 } from '@/lib/stripe';
 
 interface PaymentModalProps {
@@ -18,6 +19,7 @@ interface PaymentModalProps {
   amount: string;
   method: string;
   processing: boolean;
+  paymentType?: 'deposit' | 'game_entry' | 'tournament_entry';
 }
 
 const PaymentModal: React.FC<PaymentModalProps> = ({
@@ -26,7 +28,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   onSubmit,
   amount,
   method,
-  processing
+  processing,
+  paymentType = 'deposit'
 }) => {
   const { user, updateBalance } = useAuth();
   const [cardData, setCardData] = useState({
@@ -38,6 +41,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   });
   const [error, setError] = useState<string>('');
   const [isStripeReady, setIsStripeReady] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'failed'>('idle');
 
   // Check if Stripe is available
   useEffect(() => {
@@ -93,10 +97,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setPaymentStatus('processing');
     
     // Validate form
     if (!cardData.cardNumber || !cardData.expiryDate || !cardData.cvv || !cardData.cardholderName) {
       setError('Please fill in all required fields');
+      setPaymentStatus('failed');
       return;
     }
 
@@ -105,11 +111,13 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     const amountValidation = validatePaymentAmount(amountNum);
     if (!amountValidation.isValid) {
       setError(amountValidation.error || 'Invalid amount');
+      setPaymentStatus('failed');
       return;
     }
 
     if (!isStripeReady) {
       setError('Payment system is not available. Please try again later.');
+      setPaymentStatus('failed');
       return;
     }
 
@@ -129,6 +137,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       if (sessionError) {
         console.error('Error creating payment session:', sessionError);
         setError('Failed to create payment session. Please try again.');
+        setPaymentStatus('failed');
         return;
       }
 
@@ -137,11 +146,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
         .from('compliance_logs')
         .insert([{
           user_id: user?.id,
-          action: 'deposit_attempt',
+          action: `${paymentType}_attempt`,
           details: {
             amount: amountNum,
             method: method,
-            session_id: paymentSession.id
+            session_id: paymentSession.id,
+            payment_type: paymentType
           }
         }]);
 
@@ -161,8 +171,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
             })
             .eq('id', paymentSession.id);
 
-          // Update user balance
-          if (user) {
+          // Update user balance for deposits
+          if (paymentType === 'deposit' && user) {
             await updateBalance(amountNum);
           }
 
@@ -171,30 +181,47 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
             .from('compliance_logs')
             .insert([{
               user_id: user?.id,
-              action: 'deposit_success',
+              action: `${paymentType}_success`,
               details: {
                 amount: amountNum,
                 method: method,
-                session_id: paymentSession.id
+                session_id: paymentSession.id,
+                payment_type: paymentType
               }
             }]);
 
-          // Close modal and call onSubmit
-          onSubmit();
+          setPaymentStatus('success');
+          
+          // Close modal and call onSubmit after a brief success display
+          setTimeout(() => {
+            onSubmit();
+          }, 1500);
+
         } catch (err) {
           console.error('Error completing payment:', err);
           setError('Payment completed but there was an error updating your account. Please contact support.');
+          setPaymentStatus('failed');
         }
       }, 2000);
 
     } catch (err) {
       console.error('Payment error:', err);
       setError('Payment failed. Please try again.');
+      setPaymentStatus('failed');
     }
   };
 
   const getCardType = (cardNumber: string) => {
     return getCardBrand(cardNumber);
+  };
+
+  const getPaymentTypeLabel = () => {
+    switch (paymentType) {
+      case 'deposit': return 'Deposit';
+      case 'game_entry': return 'Game Entry Fee';
+      case 'tournament_entry': return 'Tournament Entry Fee';
+      default: return 'Payment';
+    }
   };
 
   if (!isOpen) return null;
@@ -222,18 +249,29 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 <CreditCard className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h3 className="text-white text-xl font-bold">Payment Details</h3>
+                <h3 className="text-white text-xl font-bold">{getPaymentTypeLabel()} Details</h3>
                 <p id="payment-modal-description" className="text-purple-300 text-sm">{method} - {formatCurrency(parseFloat(amount))}</p>
               </div>
             </div>
             <button
               onClick={onClose}
               className="p-2 text-purple-300 hover:text-white rounded-lg hover:bg-purple-600/30 transition-all"
-              disabled={processing}
+              disabled={processing || paymentStatus === 'processing'}
             >
               <X className="w-5 h-5" />
             </button>
           </div>
+
+          {/* Payment Status Display */}
+          {paymentStatus === 'success' && (
+            <div className="bg-green-900/30 border border-green-400/30 rounded-lg p-4 mb-4 flex items-center space-x-3">
+              <CheckCircle className="w-6 h-6 text-green-400" />
+              <div>
+                <p className="text-green-300 text-lg font-semibold">Payment Successful!</p>
+                <p className="text-green-200 text-sm">Your {getPaymentTypeLabel().toLowerCase()} has been processed.</p>
+              </div>
+            </div>
+          )}
 
           {/* Error Display */}
           {error && (
@@ -243,135 +281,137 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
             </div>
           )}
 
-          {/* Payment Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Card Number */}
-            <div>
-              <label className="block text-purple-200 text-sm font-medium mb-2">
-                Card Number *
-              </label>
-              <div className="relative">
+          {/* Payment Form - Only show if not processing or completed */}
+          {paymentStatus !== 'success' && (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Card Number */}
+              <div>
+                <label className="block text-purple-200 text-sm font-medium mb-2">
+                  Card Number *
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={cardData.cardNumber}
+                    onChange={(e) => handleInputChange('cardNumber', e.target.value)}
+                    placeholder="1234 5678 9012 3456"
+                    className="w-full bg-purple-900/30 border border-purple-400/30 rounded-lg pl-4 pr-20 py-3 text-white placeholder-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                    disabled={processing || paymentStatus === 'processing'}
+                  />
+                  <div className="absolute right-3 top-3 text-purple-300 text-sm font-bold">
+                    {getCardType(cardData.cardNumber)}
+                  </div>
+                </div>
+              </div>
+
+              {/* Expiry & CVV */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-purple-200 text-sm font-medium mb-2">
+                    Expiry Date *
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={cardData.expiryDate}
+                      onChange={(e) => handleInputChange('expiryDate', e.target.value)}
+                      placeholder="MM/YY"
+                      className="w-full bg-purple-900/30 border border-purple-400/30 rounded-lg pl-4 pr-10 py-3 text-white placeholder-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                      disabled={processing || paymentStatus === 'processing'}
+                    />
+                    <Calendar className="absolute right-3 top-3 w-5 h-5 text-purple-400" />
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-purple-200 text-sm font-medium mb-2">
+                    CVV *
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={cardData.cvv}
+                      onChange={(e) => handleInputChange('cvv', e.target.value)}
+                      placeholder="123"
+                      className="w-full bg-purple-900/30 border border-purple-400/30 rounded-lg pl-4 pr-10 py-3 text-white placeholder-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                      disabled={processing || paymentStatus === 'processing'}
+                    />
+                    <Lock className="absolute right-3 top-3 w-5 h-5 text-purple-400" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Cardholder Name */}
+              <div>
+                <label className="block text-purple-200 text-sm font-medium mb-2">
+                  Cardholder Name *
+                </label>
                 <input
                   type="text"
-                  value={cardData.cardNumber}
-                  onChange={(e) => handleInputChange('cardNumber', e.target.value)}
-                  placeholder="1234 5678 9012 3456"
-                  className="w-full bg-purple-900/30 border border-purple-400/30 rounded-lg pl-4 pr-20 py-3 text-white placeholder-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400"
-                  disabled={processing}
+                  value={cardData.cardholderName}
+                  onChange={(e) => handleInputChange('cardholderName', e.target.value)}
+                  placeholder="John Doe"
+                  className="w-full bg-purple-900/30 border border-purple-400/30 rounded-lg px-4 py-3 text-white placeholder-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                  disabled={processing || paymentStatus === 'processing'}
                 />
-                <div className="absolute right-3 top-3 text-purple-300 text-sm font-bold">
-                  {getCardType(cardData.cardNumber)}
-                </div>
               </div>
-            </div>
 
-            {/* Expiry & CVV */}
-            <div className="grid grid-cols-2 gap-4">
+              {/* Billing ZIP */}
               <div>
                 <label className="block text-purple-200 text-sm font-medium mb-2">
-                  Expiry Date *
+                  Billing ZIP Code
                 </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={cardData.expiryDate}
-                    onChange={(e) => handleInputChange('expiryDate', e.target.value)}
-                    placeholder="MM/YY"
-                    className="w-full bg-purple-900/30 border border-purple-400/30 rounded-lg pl-4 pr-10 py-3 text-white placeholder-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400"
-                    disabled={processing}
-                  />
-                  <Calendar className="absolute right-3 top-3 w-5 h-5 text-purple-400" />
+                <input
+                  type="text"
+                  value={cardData.billingZip}
+                  onChange={(e) => handleInputChange('billingZip', e.target.value)}
+                  placeholder="12345"
+                  className="w-full bg-purple-900/30 border border-purple-400/30 rounded-lg px-4 py-3 text-white placeholder-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                  disabled={processing || paymentStatus === 'processing'}
+                />
+              </div>
+
+              {/* Security Notice */}
+              <div className="bg-blue-900/30 border border-blue-400/30 rounded-lg p-3 flex items-center space-x-3">
+                <Shield className="w-5 h-5 text-blue-400" />
+                <div>
+                  <p className="text-blue-300 text-sm font-semibold">Secure Payment</p>
+                  <p className="text-blue-200 text-xs">Your payment information is encrypted and secure</p>
                 </div>
               </div>
-              
-              <div>
-                <label className="block text-purple-200 text-sm font-medium mb-2">
-                  CVV *
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={cardData.cvv}
-                    onChange={(e) => handleInputChange('cvv', e.target.value)}
-                    placeholder="123"
-                    className="w-full bg-purple-900/30 border border-purple-400/30 rounded-lg pl-4 pr-10 py-3 text-white placeholder-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400"
-                    disabled={processing}
-                  />
-                  <Lock className="absolute right-3 top-3 w-5 h-5 text-purple-400" />
-                </div>
-              </div>
-            </div>
 
-            {/* Cardholder Name */}
-            <div>
-              <label className="block text-purple-200 text-sm font-medium mb-2">
-                Cardholder Name *
-              </label>
-              <input
-                type="text"
-                value={cardData.cardholderName}
-                onChange={(e) => handleInputChange('cardholderName', e.target.value)}
-                placeholder="John Doe"
-                className="w-full bg-purple-900/30 border border-purple-400/30 rounded-lg px-4 py-3 text-white placeholder-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400"
-                disabled={processing}
-              />
-            </div>
+              {/* Submit Button */}
+              <motion.button
+                type="submit"
+                disabled={processing || paymentStatus === 'processing' || !isStripeReady}
+                whileHover={{ scale: (processing || paymentStatus === 'processing' || !isStripeReady) ? 1 : 1.02 }}
+                whileTap={{ scale: (processing || paymentStatus === 'processing' || !isStripeReady) ? 1 : 0.98 }}
+                className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-4 px-6 rounded-xl transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {paymentStatus === 'processing' ? (
+                  <div className="flex items-center justify-center space-x-2">
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Processing Payment...</span>
+                  </div>
+                ) : (
+                  `${getPaymentTypeLabel()} ${formatCurrency(parseFloat(amount))}`
+                )}
+              </motion.button>
 
-            {/* Billing ZIP */}
-            <div>
-              <label className="block text-purple-200 text-sm font-medium mb-2">
-                Billing ZIP Code
-              </label>
-              <input
-                type="text"
-                value={cardData.billingZip}
-                onChange={(e) => handleInputChange('billingZip', e.target.value)}
-                placeholder="12345"
-                className="w-full bg-purple-900/30 border border-purple-400/30 rounded-lg px-4 py-3 text-white placeholder-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400"
-                disabled={processing}
-              />
-            </div>
-
-            {/* Security Notice */}
-            <div className="bg-blue-900/30 border border-blue-400/30 rounded-lg p-3 flex items-center space-x-3">
-              <Shield className="w-5 h-5 text-blue-400" />
-              <div>
-                <p className="text-blue-300 text-sm font-semibold">Secure Payment</p>
-                <p className="text-blue-200 text-xs">Your payment information is encrypted and secure</p>
-              </div>
-            </div>
-
-            {/* Submit Button */}
-            <motion.button
-              type="submit"
-              disabled={processing || !isStripeReady}
-              whileHover={{ scale: (processing || !isStripeReady) ? 1 : 1.02 }}
-              whileTap={{ scale: (processing || !isStripeReady) ? 1 : 0.98 }}
-              className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-4 px-6 rounded-xl transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {processing ? (
-                <div className="flex items-center justify-center space-x-2">
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Processing Payment...</span>
+              {/* Status Notice */}
+              {!isStripeReady ? (
+                <div className="bg-yellow-900/30 border border-yellow-400/30 rounded-lg p-3 text-center">
+                  <p className="text-yellow-300 text-sm font-semibold">Payment System Loading</p>
+                  <p className="text-yellow-200 text-xs">Please wait while we connect to our secure payment system</p>
                 </div>
               ) : (
-                `Deposit ${formatCurrency(parseFloat(amount))}`
+                <div className="bg-green-900/30 border border-green-400/30 rounded-lg p-3 text-center">
+                  <p className="text-green-300 text-sm font-semibold">Secure Payment System</p>
+                  <p className="text-green-200 text-xs">Connected to Stripe - Your payment will be processed securely</p>
+                </div>
               )}
-            </motion.button>
-
-            {/* Status Notice */}
-            {!isStripeReady ? (
-              <div className="bg-yellow-900/30 border border-yellow-400/30 rounded-lg p-3 text-center">
-                <p className="text-yellow-300 text-sm font-semibold">Payment System Loading</p>
-                <p className="text-yellow-200 text-xs">Please wait while we connect to our secure payment system</p>
-              </div>
-            ) : (
-              <div className="bg-green-900/30 border border-green-400/30 rounded-lg p-3 text-center">
-                <p className="text-green-300 text-sm font-semibold">Secure Payment System</p>
-                <p className="text-green-200 text-xs">Connected to Stripe - Your payment will be processed securely</p>
-              </div>
-            )}
-          </form>
+            </form>
+          )}
         </motion.div>
       </motion.div>
     </AnimatePresence>

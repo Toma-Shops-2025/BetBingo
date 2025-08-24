@@ -13,6 +13,7 @@ import SettingsScreen from './SettingsScreen';
 import PrivacyPolicyScreen from './PrivacyPolicyScreen';
 import TermsOfServiceScreen from './TermsOfServiceScreen';
 import ResponsibleGamingScreen from './ResponsibleGamingScreen';
+import ContactScreen from './ContactScreen';
 import AuthModal from './AuthModal';
 import { PitchBlackBackground } from './ModernBackgrounds';
 import GamblingNavigation from './GamblingNavigation';
@@ -187,25 +188,13 @@ const AppLayout: React.FC = () => {
         return <TermsOfServiceScreen onBack={() => setActiveScreen('lobby')} />;
       case 'responsible':
         return <ResponsibleGamingScreen onBack={() => setActiveScreen('lobby')} />;
+      case 'contact':
+        return <ContactScreen onBack={() => setActiveScreen('lobby')} />;
       case 'faq':
         return (
           <div className="p-4 text-center">
             <h1 className="text-2xl font-bold text-white mb-4">FAQ - Coming Soon!</h1>
             <p className="text-purple-300">Frequently Asked Questions will be available here.</p>
-            <button 
-              onClick={() => setActiveScreen('lobby')}
-              className="mt-4 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg"
-            >
-              Back to Lobby
-            </button>
-          </div>
-        );
-      case 'contact':
-        return (
-          <div className="p-4 text-center">
-            <h1 className="text-2xl font-bold text-white mb-4">Contact Us - Coming Soon!</h1>
-            <p className="text-purple-300">Contact form will be available here.</p>
-            <p className="text-purple-400 text-sm mt-2">For now, email: support@betbingo.live</p>
             <button 
               onClick={() => setActiveScreen('lobby')}
               className="mt-4 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg"
@@ -280,6 +269,13 @@ const AppLayout: React.FC = () => {
               className="text-red-400 hover:text-red-300 underline font-semibold"
             >
               Responsible Gaming
+            </button>
+            <span>•</span>
+            <button 
+              onClick={() => setActiveScreen('contact')}
+              className="text-blue-400 hover:text-blue-300 underline"
+            >
+              Contact Us
             </button>
             <span>•</span>
             <a 

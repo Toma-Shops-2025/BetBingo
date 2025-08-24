@@ -213,7 +213,7 @@ const AppLayout: React.FC = () => {
       case 'cashier':
         return <CashierScreen />;
       case 'profile':
-        return <ProfileScreen />;
+        return <ProfileScreen onScreenChange={(screen) => setActiveScreen(screen as ScreenType)} />;
       case 'leaderboard':
         return <LeaderboardScreen />;
       case 'settings':

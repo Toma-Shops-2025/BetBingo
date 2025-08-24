@@ -19,13 +19,29 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
-const ProfileScreen: React.FC = () => {
+interface ProfileScreenProps {
+  onScreenChange?: (screen: string) => void;
+}
+
+const ProfileScreen: React.FC<ProfileScreenProps> = ({ onScreenChange }) => {
   const { user, updateUser } = useAuth();
   const [editMode, setEditMode] = useState(false);
   const [username, setUsername] = useState(user?.username || '');
   const [profileImage, setProfileImage] = useState<string | null>(user?.avatar || null);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAccountSettings = () => {
+    if (onScreenChange) {
+      onScreenChange('settings');
+    } else {
+      // Fallback: try to navigate using the bottom navigation
+      console.log('Account Settings clicked - navigating to settings');
+      // This will work with the bottom navigation system
+      const event = new CustomEvent('navigateToScreen', { detail: 'settings' });
+      window.dispatchEvent(event);
+    }
+  };
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -474,12 +490,26 @@ const ProfileScreen: React.FC = () => {
         </div>
       </motion.div>
 
+      {/* Account Settings Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.85 }}
+        className="text-center mb-4"
+      >
+        <h4 className="text-purple-300 font-semibold text-sm mb-2">Account Management</h4>
+        <p className="text-purple-200 text-xs">Customize your account preferences and security settings</p>
+      </motion.div>
+
       {/* Account Settings Button */}
       <motion.button
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.9 }}
-        className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold py-4 px-6 rounded-2xl transition-all shadow-lg flex items-center justify-center space-x-2"
+        onClick={handleAccountSettings}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold py-4 px-6 rounded-2xl transition-all shadow-lg hover:shadow-xl flex items-center justify-center space-x-2 cursor-pointer"
       >
         <Settings className="w-5 h-5" />
         <span>Account Settings</span>

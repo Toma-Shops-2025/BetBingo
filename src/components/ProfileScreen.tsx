@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { 
   User, 
@@ -14,7 +14,8 @@ import {
   Award,
   Zap,
   Shield,
-  Settings
+  Settings,
+  X
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -22,6 +23,53 @@ const ProfileScreen: React.FC = () => {
   const { user, updateUser } = useAuth();
   const [editMode, setEditMode] = useState(false);
   const [username, setUsername] = useState(user?.username || '');
+  const [profileImage, setProfileImage] = useState<string | null>(user?.avatar || null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file (JPEG, PNG, GIF, etc.)');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image file size must be less than 5MB');
+      return;
+    }
+
+    setIsUploading(true);
+
+    // Create a preview URL for the image
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result as string;
+      setProfileImage(result);
+      setIsUploading(false);
+      
+      // Update user profile with new image
+      if (updateUser) {
+        updateUser({ avatar: result });
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeProfileImage = () => {
+    setProfileImage(null);
+    if (updateUser) {
+      updateUser({ avatar: null });
+    }
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
 
   const stats = [
     { 
@@ -138,25 +186,64 @@ const ProfileScreen: React.FC = () => {
           <div className="relative">
             <motion.div
               whileHover={{ scale: 1.05 }}
-              className="w-24 h-24 bg-gradient-to-br from-purple-400 to-blue-400 rounded-full flex items-center justify-center shadow-2xl"
+              className="w-24 h-24 bg-gradient-to-br from-purple-400 to-blue-400 rounded-full flex items-center justify-center shadow-2xl overflow-hidden"
             >
-              {user?.avatar ? (
+              {profileImage ? (
                 <img 
-                  src={user.avatar} 
+                  src={profileImage} 
                   alt="Profile" 
                   className="w-full h-full rounded-full object-cover"
                 />
               ) : (
                 <User className="w-12 h-12 text-white" />
               )}
+              
+              {/* Uploading indicator */}
+              {isUploading && (
+                <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    className="w-6 h-6 border-2 border-white border-t-transparent rounded-full"
+                  />
+                </div>
+              )}
             </motion.div>
+            
+            {/* Camera button for upload */}
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              className="absolute -bottom-2 -right-2 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full p-2 shadow-lg"
+              onClick={triggerFileInput}
+              className="absolute -bottom-2 -right-2 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full p-2 shadow-lg hover:from-green-600 hover:to-emerald-700 transition-all"
+              title="Change profile picture"
             >
               <Camera className="w-4 h-4 text-white" />
             </motion.button>
+            
+            {/* Remove photo button (only show if there's an image) */}
+            {profileImage && (
+              <motion.button
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={removeProfileImage}
+                className="absolute -bottom-2 -left-2 bg-gradient-to-r from-red-500 to-red-600 rounded-full p-2 shadow-lg hover:from-red-600 hover:to-red-700 transition-all"
+                title="Remove profile picture"
+              >
+                <X className="w-4 h-4 text-white" />
+              </motion.button>
+            )}
+            
+            {/* Hidden file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+            />
           </div>
 
           {/* User Info */}
@@ -208,6 +295,24 @@ const ProfileScreen: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Photo Upload Instructions */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="mt-4 p-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-400/20 rounded-xl"
+        >
+          <div className="flex items-center space-x-3">
+            <Camera className="w-5 h-5 text-blue-400" />
+            <div>
+              <h4 className="text-blue-300 font-semibold text-sm">Profile Photo</h4>
+              <p className="text-blue-200 text-xs">
+                Click the camera icon to upload a photo • Max size: 5MB • Supports: JPEG, PNG, GIF
+              </p>
+            </div>
+          </div>
+        </motion.div>
 
         {/* Experience Bar */}
         <div className="mt-6">

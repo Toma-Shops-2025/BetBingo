@@ -29,6 +29,7 @@ interface AuthContextType {
   resendConfirmationEmail: (email: string) => Promise<{ error: any }>;
   resetPassword: (email: string) => Promise<{ error: any }>;
   setIsDemoMode: (enabled: boolean) => void;
+  updateUser: (updates: Partial<AuthUser>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -334,8 +335,27 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const updateUser = (updates: Partial<AuthUser>) => {
-    setUser(prev => prev ? { ...prev, ...updates } : null);
+  const updateUser = async (updates: Partial<AuthUser>) => {
+    if (isDemoMode) {
+      // Demo mode - update local state
+      setUser(prev => prev ? { ...prev, ...updates } : null);
+      return;
+    }
+
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', user.id);
+
+      if (!error) {
+        setUser(prev => prev ? { ...prev, ...updates } : null);
+      }
+    } catch (error) {
+      console.error('Error updating user:', error);
+    }
   };
 
   const claimBonus = async () => {
@@ -381,6 +401,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       resendConfirmationEmail,
       resetPassword,
       setIsDemoMode,
+      updateUser,
     }}>
       {children}
     </AuthContext.Provider>

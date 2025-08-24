@@ -93,11 +93,16 @@ const gameReducer = (state: GameState, action: any): GameState => {
           currentMatch: action.payload.match,
           playerCard: action.payload.playerCard,
           opponentCard: action.payload.opponentCard,
-          gameStatus: 'playing',
+          gameStatus: 'waiting',
           calledNumbers: [],
           currentNumber: null,
           gameTimer: 0,
           isPaused: false,
+        };
+      case 'START_GAME':
+        return {
+          ...state,
+          gameStatus: 'playing',
         };
       case 'END_MATCH':
         return {

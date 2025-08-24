@@ -170,14 +170,70 @@ const GameScreen: React.FC<GameScreenProps> = ({ onExitGame }) => {
               animate={{ opacity: 1, y: 0 }}
               className="bg-gradient-to-r from-green-600/30 to-emerald-600/30 border-2 border-green-400/40 rounded-2xl p-4 backdrop-blur-md text-center"
             >
-              <div className="flex items-center justify-center space-x-3">
-                <div className="p-2 bg-green-500/30 rounded-lg">
-                  <Target className="w-6 h-6 text-green-400" />
+              <div className="flex flex-col items-center space-y-4">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-green-500/30 rounded-lg">
+                    <Target className="w-6 h-6 text-green-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-green-300 text-xl font-bold">🎯 PRACTICE MODE</h3>
+                    <p className="text-green-200 text-sm">No real money at stake - perfect for learning!</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-green-300 text-xl font-bold">🎯 PRACTICE MODE</h3>
-                  <p className="text-green-200 text-sm">No real money at stake - perfect for learning!</p>
-                </div>
+                
+                {/* Start Game Button for Practice Mode */}
+                {gameState.gameStatus === 'waiting' && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.3 }}
+                  >
+                    <Button
+                      onClick={() => {
+                        dispatch({ type: 'START_GAME' });
+                        // Manually start calling numbers if the game isn't starting
+                        if (gameState.gameStatus === 'waiting') {
+                          const interval = setInterval(() => {
+                            if (gameState.gameStatus !== 'playing') {
+                              clearInterval(interval);
+                              return;
+                            }
+                            
+                            const availableNumbers = Array.from({ length: 75 }, (_, i) => i + 1)
+                              .filter(num => !gameState.calledNumbers.includes(num));
+                            
+                            if (availableNumbers.length === 0) {
+                              clearInterval(interval);
+                              return;
+                            }
+                            
+                            const randomNumber = availableNumbers[Math.floor(Math.random() * availableNumbers.length)];
+                            
+                            dispatch({
+                              type: 'CALL_NUMBER',
+                              payload: { number: randomNumber },
+                            });
+                          }, 3000);
+                        }
+                      }}
+                      className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold px-8 py-3 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-200"
+                    >
+                      <Play className="w-5 h-5 mr-2" />
+                      Start Practice Game
+                    </Button>
+                  </motion.div>
+                )}
+                
+                {/* Game Status for Practice Mode */}
+                {gameState.gameStatus === 'playing' && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-green-500/20 border border-green-400/30 rounded-lg px-4 py-2"
+                  >
+                    <p className="text-green-300 text-sm font-medium">🎮 Game in Progress!</p>
+                  </motion.div>
+                )}
               </div>
             </motion.div>
           )}

@@ -55,6 +55,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ onExitGame }) => {
   });
   const [currentNumber, setCurrentNumber] = useState<number | null>(null);
   const [calledNumbers, setCalledNumbers] = useState<Array<{letter: string, number: number, timestamp: number}>>([]);
+  const [unreadMessages, setUnreadMessages] = useState(0);
 
   // Mock current game data
   const currentGame = {
@@ -78,7 +79,7 @@ const GameScreen: React.FC<GameScreenProps> = ({ onExitGame }) => {
   };
 
   const confirmExit = () => {
-    endMatch();
+    endMatch('timeout');
     setShowExitConfirm(false);
     onExitGame();
   };
@@ -98,8 +99,21 @@ const GameScreen: React.FC<GameScreenProps> = ({ onExitGame }) => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Simulate receiving new messages (for demo purposes)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Randomly add unread messages every 30 seconds (for demo)
+      if (Math.random() < 0.3 && !chatOpen) { // 30% chance every 30 seconds
+        setUnreadMessages(prev => prev + 1);
+      }
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [chatOpen]);
+
   const convertToBingoCard = (cardNumbers: number[][]): BingoCardType => {
     return {
+      id: 'player-card',
       numbers: cardNumbers.map(row => 
         row.map(num => num === 0 ? null : num)
       ) as (number | null)[][],
@@ -204,11 +218,25 @@ const GameScreen: React.FC<GameScreenProps> = ({ onExitGame }) => {
 
                 {/* Chat Toggle */}
                 <button
-                  onClick={() => setChatOpen(!chatOpen)}
+                  onClick={() => {
+                    setChatOpen(!chatOpen);
+                    if (!chatOpen && unreadMessages > 0) {
+                      setUnreadMessages(0); // Clear unread count when opening chat
+                    }
+                  }}
                   className="p-2 bg-purple-500/20 border border-purple-400/30 rounded-lg text-purple-400 hover:bg-purple-500/30 transition-all relative"
                 >
                   <MessageCircle className="w-5 h-5" />
-                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
+                  {/* Show red dot or badge for unread messages */}
+                  {unreadMessages > 0 && (
+                    unreadMessages === 1 ? (
+                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
+                    ) : (
+                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-xs text-white font-bold">
+                        {unreadMessages > 9 ? '9+' : unreadMessages}
+                      </div>
+                    )
+                  )}
                 </button>
               </div>
             </div>
@@ -275,8 +303,6 @@ const GameScreen: React.FC<GameScreenProps> = ({ onExitGame }) => {
                 {playerCard ? (
                   <AnimatedBingoCard 
                     card={convertToBingoCard(playerCard)} 
-                    calledNumbers={calledNumbers.map(cn => cn.number)}
-                    hasWin={gameState.gameStatus === 'won'}
                   />
                 ) : (
                   <div className="bg-green-500/10 border border-green-400/20 rounded-xl p-8 text-center">
@@ -315,8 +341,6 @@ const GameScreen: React.FC<GameScreenProps> = ({ onExitGame }) => {
                 {opponentCard ? (
                   <AnimatedBingoCard 
                     card={convertToBingoCard(opponentCard)} 
-                    calledNumbers={calledNumbers.map(cn => cn.number)}
-                    hasWin={false}
                   />
                 ) : (
                   <div className="bg-red-500/10 border border-red-400/20 rounded-xl p-8 text-center">
@@ -328,17 +352,16 @@ const GameScreen: React.FC<GameScreenProps> = ({ onExitGame }) => {
           </div>
 
           {/* Called Numbers */}
-          <AnimatedCalledNumbers numbers={calledNumbers} />
+          <AnimatedCalledNumbers calledNumbers={calledNumbers} />
 
           {/* Power-ups */}
           <AnimatedPowerUpsBar 
             powerUps={powerUps}
             onUsePowerUp={usePowerUp}
-            gameActive={gameState.gameStatus === 'playing'}
           />
 
           {/* Balance Display */}
-          <AnimatedMoneyDisplay balance={user.balance} />
+          <AnimatedMoneyDisplay amount={user.balance} />
         </div>
 
         {/* Chat System */}
@@ -351,13 +374,13 @@ const GameScreen: React.FC<GameScreenProps> = ({ onExitGame }) => {
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
               className="fixed top-0 right-0 w-80 h-full bg-purple-900/95 backdrop-blur-xl border-l border-purple-400/30 z-50"
             >
-              <ChatSystem onClose={() => setChatOpen(false)} />
+              <ChatSystem isOpen={chatOpen} onClose={() => setChatOpen(false)} />
             </motion.div>
           )}
         </AnimatePresence>
 
         {/* Confetti */}
-        {showConfetti && <AnimatedConfetti />}
+        {showConfetti && <AnimatedConfetti isActive={showConfetti} />}
       </div>
 
       {/* Exit Confirmation Modal */}

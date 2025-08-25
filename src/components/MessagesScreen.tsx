@@ -21,7 +21,7 @@ import {
   Gamepad2,
   Trophy,
   DollarSign,
-  Block,
+  Shield,
   Flag,
   Trash2,
   Volume2,
@@ -343,7 +343,7 @@ const MessagesScreen: React.FC<MessagesScreenProps> = ({ onBack }) => {
                 onClick={handleBlockUser}
                 className="flex items-center space-x-2 cursor-pointer hover:bg-gray-700 focus:bg-gray-700"
               >
-                <Block className="w-4 h-4" />
+                <Shield className="w-4 h-4" />
                 <span>Block User</span>
               </DropdownMenuItem>
               <DropdownMenuItem 

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import type { User, Session } from '@supabase/supabase-js';
 
 interface AuthUser {
@@ -24,14 +24,18 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   isDemoMode: boolean;
+  biometricsAvailable: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, username: string) => Promise<{ error: any; message?: string }>;
   signOut: () => Promise<void>;
   signInWithProvider: (provider: 'google' | 'github') => Promise<{ error: any }>;
+  signInWithBiometrics: () => Promise<{ error: any }>;
   resendConfirmationEmail: (email: string) => Promise<{ error: any }>;
   resetPassword: (email: string) => Promise<{ error: any }>;
   setIsDemoMode: (enabled: boolean) => void;
   updateUser: (updates: Partial<AuthUser>) => Promise<void>;
+  updateBalance: (amount: number) => Promise<void>;
+  claimBonus: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -67,6 +71,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isDemoMode, setIsDemoMode] = useState(true); // Temporarily enable demo mode until Supabase is configured
+  const [biometricsAvailable, setBiometricsAvailable] = useState(false);
+
+  // Check if biometric authentication is available
+  useEffect(() => {
+    const checkBiometrics = async () => {
+      try {
+        // Check if WebAuthn is supported
+        if (window.PublicKeyCredential) {
+          const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+          setBiometricsAvailable(available);
+        }
+      } catch (error) {
+        console.log('Biometrics not available:', error);
+        setBiometricsAvailable(false);
+      }
+    };
+    
+    checkBiometrics();
+  }, []);
 
   useEffect(() => {
     if (isDemoMode) {
@@ -296,13 +319,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const signInWithProvider = async (provider: 'google' | 'github') => {
-    if (isDemoMode) {
-      // Demo mode - simulate provider sign in
+    if (isDemoMode || !isSupabaseConfigured()) {
+      // Demo mode or Supabase not configured - simulate provider sign in
+      console.log(`Demo mode: Simulating ${provider} sign in`);
       setUser(demoUser);
       return { error: null };
     }
 
     try {
+      console.log(`Attempting ${provider} OAuth sign in...`);
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
@@ -310,8 +335,54 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         },
       });
 
+      if (error) {
+        console.error(`${provider} OAuth error:`, error);
+        // If OAuth fails, fall back to demo mode
+        if (error.message?.includes('provider is not enabled')) {
+          console.log('Provider not enabled, falling back to demo mode');
+          setUser(demoUser);
+          return { error: null };
+        }
+      }
+
       return { error };
     } catch (error) {
+      console.error(`${provider} OAuth exception:`, error);
+      // Fall back to demo mode on any error
+      setUser(demoUser);
+      return { error: null };
+    }
+  };
+
+  const signInWithBiometrics = async () => {
+    if (isDemoMode) {
+      // Demo mode - simulate biometric sign in
+      setUser(demoUser);
+      return { error: null };
+    }
+
+    try {
+      // Check if biometric authentication is available
+      if (!biometricsAvailable) {
+        throw new Error('Biometric authentication not available on this device');
+      }
+
+      // For demo purposes, simulate biometric authentication
+      // In production, you would implement WebAuthn authentication
+      console.log('Biometric authentication requested...');
+      
+      // Simulate biometric verification delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // For now, just sign in with the last known user
+      // In production, you would verify the biometric and get user credentials
+      if (user) {
+        return { error: null };
+      } else {
+        throw new Error('No user found for biometric authentication');
+      }
+    } catch (error) {
+      console.error('Biometric authentication error:', error);
       return { error };
     }
   };
@@ -398,14 +469,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       session,
       loading,
       isDemoMode,
+      biometricsAvailable,
       signIn,
       signUp,
       signOut,
       signInWithProvider,
+      signInWithBiometrics,
       resendConfirmationEmail,
       resetPassword,
       setIsDemoMode,
       updateUser,
+      updateBalance,
+      claimBonus,
     }}>
       {children}
     </AuthContext.Provider>

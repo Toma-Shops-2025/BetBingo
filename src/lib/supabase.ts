@@ -22,8 +22,14 @@ export const supabase = createClient(
       persistSession: true,
       detectSessionInUrl: true,
       flowType: 'pkce',
+      debug: import.meta.env.DEV,
     }
   }
 )
+
+// Helper function to check if Supabase is properly configured
+export const isSupabaseConfigured = () => {
+  return !!(supabaseUrl && supabaseAnonKey && supabaseUrl !== 'https://nlyujvvgglcymygaxhhi.supabase.co')
+}
 
 export type { User, Session } from '@supabase/supabase-js'

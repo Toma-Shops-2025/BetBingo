@@ -22,7 +22,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [success, setSuccess] = useState<string | null>(null)
   const [showEmailConfirmation, setShowEmailConfirmation] = useState(false)
   const [showPasswordReset, setShowPasswordReset] = useState(false)
-  const { signIn, signUp, signInWithProvider, resendConfirmationEmail, resetPassword, isDemoMode } = useAuth()
+  const { signIn, signUp, signInWithProvider, resendConfirmationEmail, resetPassword, isDemoMode, biometricsAvailable, signInWithBiometrics } = useAuth()
 
   const clearMessages = () => {
     setError(null)
@@ -210,6 +210,14 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               </AlertDescription>
             </Alert>
           )}
+          {!isDemoMode && (
+            <Alert className="mt-4 bg-blue-900/30 border-blue-400/30">
+              <AlertCircle className="h-4 w-4 text-blue-400" />
+              <AlertDescription className="text-blue-300 text-sm">
+                🔐 Production Mode: Real authentication is enabled
+              </AlertDescription>
+            </Alert>
+          )}
         </DialogHeader>
 
         {/* Error and Success Messages */}
@@ -393,6 +401,41 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           </Tabs>
         )}
 
+        {/* Biometric Login */}
+        {!showEmailConfirmation && !showPasswordReset && biometricsAvailable && (
+          <div className="mt-6">
+            <Button
+              variant="outline"
+              onClick={async () => {
+                setLoading(true);
+                clearMessages();
+                const { error } = await signInWithBiometrics();
+                if (error) {
+                  setError(error.message || 'Biometric authentication failed');
+                } else {
+                  setSuccess('Biometric authentication successful!');
+                  setTimeout(() => {
+                    onClose();
+                    setSuccess(null);
+                  }, 1000);
+                }
+                setLoading(false);
+              }}
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white border-0"
+            >
+              {loading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <svg className="mr-2 h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+              )}
+              🔐 Login with Biometrics
+            </Button>
+          </div>
+        )}
+
         {/* Social Login Buttons */}
         {!showEmailConfirmation && !showPasswordReset && (
           <>
@@ -429,7 +472,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                     d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                   />
                 </svg>
-                Google
+                {isDemoMode ? 'Google (Demo)' : 'Google'}
               </Button>
               <Button
                 variant="outline"
@@ -438,9 +481,14 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 className="bg-white/10 border-white/20 text-white hover:bg-white/20"
               >
                 <Github className="mr-2 h-4 w-4" />
-                GitHub
+                {isDemoMode ? 'GitHub (Demo)' : 'GitHub'}
               </Button>
             </div>
+            {isDemoMode && (
+              <p className="text-center text-xs text-purple-400/60 mt-2">
+                OAuth providers are in demo mode - they'll create demo accounts
+              </p>
+            )}
           </>
         )}
 

@@ -28,7 +28,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, username: string) => Promise<{ error: any; message?: string }>;
   signOut: () => Promise<void>;
-  signInWithProvider: (provider: 'google' | 'github') => Promise<{ error: any }>;
+  signInWithProvider: (provider: 'google') => Promise<{ error: any }>;
   signInWithBiometrics: () => Promise<{ error: any }>;
   resendConfirmationEmail: (email: string) => Promise<{ error: any }>;
   resetPassword: (email: string) => Promise<{ error: any }>;
@@ -318,7 +318,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const signInWithProvider = async (provider: 'google' | 'github') => {
+  const signInWithProvider = async (provider: 'google') => {
     if (isDemoMode || !isSupabaseConfigured()) {
       // Demo mode or Supabase not configured - simulate provider sign in
       console.log(`Demo mode: Simulating ${provider} sign in`);

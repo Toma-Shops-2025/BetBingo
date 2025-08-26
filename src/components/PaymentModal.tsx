@@ -216,6 +216,11 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           }
         }, 2000);
 
+      } catch (err) {
+        console.error('Payment error:', err);
+        setError('Payment failed. Please try again.');
+        setPaymentStatus('failed');
+      }
     } catch (err) {
       console.error('Payment error:', err);
       setError('Payment failed. Please try again.');

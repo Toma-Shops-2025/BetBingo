@@ -22,7 +22,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [success, setSuccess] = useState<string | null>(null)
   const [showEmailConfirmation, setShowEmailConfirmation] = useState(false)
   const [showPasswordReset, setShowPasswordReset] = useState(false)
-  const { signIn, signUp, signInWithProvider, resendConfirmationEmail, resetPassword } = useAuth()
+  const { signIn, signUp, signInWithProvider, resendConfirmationEmail, resetPassword, isDemoMode } = useAuth()
 
   const clearMessages = () => {
     setError(null)
@@ -202,6 +202,14 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             <Sparkles className="w-6 h-6 text-yellow-400" />
           </div>
           <p id="auth-modal-description" className="text-purple-200 text-sm">💰 Where speed meets strategy!</p>
+          {isDemoMode && (
+            <Alert className="mt-4 bg-yellow-900/30 border-yellow-400/30">
+              <AlertCircle className="h-4 w-4 text-yellow-400" />
+              <AlertDescription className="text-yellow-300 text-sm">
+                🧪 Demo Mode: You can test the app with a demo account. Real authentication will be enabled soon!
+              </AlertDescription>
+            </Alert>
+          )}
         </DialogHeader>
 
         {/* Error and Success Messages */}

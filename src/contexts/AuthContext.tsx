@@ -66,7 +66,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser] = useState<AuthUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isDemoMode, setIsDemoMode] = useState(false); // Set to false to enable real authentication
+  const [isDemoMode, setIsDemoMode] = useState(true); // Temporarily enable demo mode until Supabase is configured
 
   useEffect(() => {
     if (isDemoMode) {

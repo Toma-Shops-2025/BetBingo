@@ -5,14 +5,18 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
-import { Bell, Volume2, Shield, Palette, Smartphone, Globe, User, LogOut, Trash2 } from 'lucide-react';
+import { Bell, Volume2, Shield, Palette, Smartphone, Globe, User, LogOut, Trash2, Sparkles, Settings } from 'lucide-react';
 
 const SettingsScreen: React.FC = () => {
   const { user, signOut, isDemoMode, setIsDemoMode } = useAuth();
   const [settings, setSettings] = useState({
     notifications: true,
     sound: true,
-    privacyMode: false
+    privacyMode: false,
+    autoMark: false,
+    soundEnabled: true,
+    theme: 'dark',
+    language: 'en'
   });
 
   const handleSettingChange = (key: string, value: any) => {

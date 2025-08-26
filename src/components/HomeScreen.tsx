@@ -22,7 +22,15 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStartGame }) => {
   const [showCashOutModal, setShowCashOutModal] = useState(false);
 
   const handleStartMatch = (isPractice: boolean) => {
+    console.log('Starting match:', { isPractice, userBalance: user?.balance });
     onStartGame(isPractice);
+  };
+
+  const testGameStart = () => {
+    console.log('Testing game start...');
+    console.log('User:', user);
+    console.log('User balance:', user?.balance);
+    console.log('Game stats:', gameStats);
   };
 
   const stats = [
@@ -216,6 +224,32 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStartGame }) => {
               delay={0.7 + index * 0.1}
             />
           ))}
+        </motion.div>
+
+        {/* Test Buttons */}
+        <motion.div 
+          className="text-center mb-8 space-y-3"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.8 }}
+        >
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Button
+              onClick={testGameStart}
+              variant="outline"
+              className="text-purple-300 border-purple-400/30 hover:bg-purple-600/30"
+            >
+              🧪 Test Game System
+            </Button>
+            <Button
+              onClick={() => window.open('/deposit', '_blank')}
+              variant="outline"
+              className="text-green-300 border-green-400/30 hover:bg-green-600/30"
+            >
+              💰 Test Deposit
+            </Button>
+          </div>
+          <p className="text-xs text-purple-400/60">Use these buttons to test the game system</p>
         </motion.div>
 
         {/* Leaderboard */}

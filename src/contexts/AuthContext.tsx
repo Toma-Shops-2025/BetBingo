@@ -14,6 +14,8 @@ interface AuthUser {
   level: number;
   experience: number;
   avatar?: string;
+  achievements: string[];
+  badges: string[];
   createdAt: string;
 }
 
@@ -55,6 +57,8 @@ const demoUser: AuthUser = {
   level: 5,
   experience: 1250,
   avatar: undefined,
+  achievements: ['First Win', 'Streak Master', 'High Roller'],
+  badges: ['Winner', 'Lucky', 'Champion'],
   createdAt: new Date().toISOString()
 };
 
@@ -62,7 +66,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser] = useState<AuthUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isDemoMode, setIsDemoMode] = useState(true); // Set to true for demo mode during development
+  const [isDemoMode, setIsDemoMode] = useState(false); // Set to false to enable real authentication
 
   useEffect(() => {
     if (isDemoMode) {

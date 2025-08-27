@@ -314,6 +314,11 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         },
       });
 
+      // Start the game immediately
+      dispatch({
+        type: 'START_GAME',
+      });
+
       // Start calling numbers
       startNumberCalling();
     } catch (error) {

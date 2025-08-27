@@ -31,7 +31,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   processing,
   paymentType = 'deposit'
 }) => {
-  const { user, updateBalance } = useAuth();
+  const { user, updateBalance, isDemoMode } = useAuth();
   const [cardData, setCardData] = useState({
     cardNumber: '',
     expiryDate: '',
@@ -122,6 +122,29 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     }
 
     try {
+      // For demo mode, simulate payment processing
+      if (isDemoMode) {
+        console.log('Demo mode: Simulating payment processing...');
+        
+        // Simulate payment processing delay
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Update user balance for deposits in demo mode
+        if (paymentType === 'deposit' && user) {
+          await updateBalance(amountNum);
+        }
+        
+        setPaymentStatus('success');
+        
+        // Close modal and call onSubmit after a brief success display
+        setTimeout(() => {
+          onSubmit();
+        }, 1500);
+        
+        return;
+      }
+
+      // Real payment processing (only if not in demo mode)
       // Create payment session in database
       const { data: paymentSession, error: sessionError } = await supabase
         .from('payment_sessions')

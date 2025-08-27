@@ -220,23 +220,40 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Start match
   const startMatch = async (isPractice: boolean, entryFee: number = 0.50) => {
     try {
-      // For now, use demo user to ensure games can start
-      const user = {
-        id: 'demo-user',
-        username: 'Demo Player',
-        balance: 100,
-        level: 1,
-        experience: 0,
-        totalEarnings: 0,
-        gamesPlayed: 0,
-        gamesWon: 0
-      };
+      // Get the actual user from AuthContext
+      let currentUser: any = null;
+      try {
+        const { useAuth } = await import('./AuthContext');
+        const authContext = useAuth();
+        currentUser = authContext.user;
+      } catch (error) {
+        console.warn('Auth context not available, using demo user');
+        currentUser = {
+          id: 'demo-user',
+          username: 'Demo Player',
+          balance: 100,
+          level: 1,
+          experience: 0,
+          totalEarnings: 0,
+          gamesPlayed: 0,
+          gamesWon: 0
+        };
+      }
 
-      console.log('Starting match with demo user:', { isPractice, entryFee });
+      if (!currentUser) {
+        throw new Error('No user available to start game');
+      }
+
+      console.log('Starting match with user:', { 
+        isPractice, 
+        entryFee, 
+        username: currentUser.username,
+        balance: currentUser.balance 
+      });
 
       // For cash games, check if user has enough balance
-      if (!isPractice && user.balance < entryFee) {
-        const errorMsg = `Insufficient balance. You need $${entryFee.toFixed(2)} but only have $${user.balance.toFixed(2)}.`;
+      if (!isPractice && currentUser.balance < entryFee) {
+        const errorMsg = `Insufficient balance. You need $${entryFee.toFixed(2)} but only have $${currentUser.balance.toFixed(2)}.`;
         console.error(errorMsg);
         throw new Error(errorMsg);
       }
@@ -245,12 +262,24 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (!isPractice) {
         try {
           // Actually deduct the entry fee from user's balance
-          const newBalance = user.balance - entryFee;
+          const newBalance = currentUser.balance - entryFee;
           
           console.log(`Successfully deducted $${entryFee.toFixed(2)} entry fee. New balance: $${newBalance.toFixed(2)}`);
           
+          // Update the user's balance in AuthContext if available
+          try {
+            const { useAuth } = await import('./AuthContext');
+            const authContext = useAuth();
+            if (authContext.updateBalance) {
+              await authContext.updateBalance(-entryFee); // Deduct the fee
+              console.log('Balance updated in AuthContext');
+            }
+          } catch (error) {
+            console.warn('Could not update balance in AuthContext:', error);
+          }
+          
           // Update the local user object for the match
-          user.balance = newBalance;
+          currentUser.balance = newBalance;
         } catch (error) {
           console.error('Failed to deduct entry fee:', error);
           throw new Error(`Failed to deduct entry fee. Please try again.`);
@@ -261,15 +290,15 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const opponentCard = generateBingoCard();
 
       const mockPlayer1: Player = {
-        id: user.id,
-        username: user.username,
-        avatar: user.avatar,
-        level: user.level,
-        experience: user.experience,
-        balance: user.balance,
-        totalEarnings: user.totalEarnings,
-        gamesPlayed: user.gamesPlayed,
-        gamesWon: user.gamesWon,
+        id: currentUser.id,
+        username: currentUser.username,
+        avatar: currentUser.avatar,
+        level: currentUser.level,
+        experience: currentUser.experience,
+        balance: currentUser.balance,
+        totalEarnings: currentUser.totalEarnings,
+        gamesPlayed: currentUser.gamesPlayed,
+        gamesWon: currentUser.gamesWon,
         achievements: [],
         badges: [],
       };
@@ -319,8 +348,10 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         type: 'START_GAME',
       });
 
-      // Start calling numbers
-      startNumberCalling();
+      // Start calling numbers after a brief delay to ensure state is updated
+      setTimeout(() => {
+        startNumberCalling();
+      }, 100);
     } catch (error) {
       console.error('Error starting match:', error);
       throw error; // Re-throw to let calling component handle it
@@ -368,8 +399,13 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Start calling numbers
   const startNumberCalling = () => {
     try {
+      console.log('Starting number calling... Game status:', gameState.gameStatus);
+      
       const interval = setInterval(() => {
+        console.log('Number calling interval - Game status:', gameState.gameStatus, 'Paused:', gameState.isPaused);
+        
         if (gameState.gameStatus !== 'playing' || gameState.isPaused) {
+          console.log('Stopping number calling - Game not playing or paused');
           clearInterval(interval);
           return;
         }
@@ -378,11 +414,13 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           .filter(num => !gameState.calledNumbers.includes(num));
 
         if (availableNumbers.length === 0) {
+          console.log('No more numbers available, stopping game');
           clearInterval(interval);
           return;
         }
 
         const randomNumber = availableNumbers[Math.floor(Math.random() * availableNumbers.length)];
+        console.log('Calling number:', randomNumber);
         
         dispatch({
           type: 'CALL_NUMBER',
@@ -391,9 +429,11 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
         // Check for win
         if (gameState.playerCard && checkWin(gameState.playerCard, [...gameState.calledNumbers, randomNumber])) {
+          console.log('Player wins!');
           clearInterval(interval);
           endMatch('player');
         } else if (gameState.opponentCard && checkWin(gameState.opponentCard, [...gameState.calledNumbers, randomNumber])) {
+          console.log('Opponent wins!');
           clearInterval(interval);
           endMatch('opponent');
         }

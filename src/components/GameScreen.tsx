@@ -1,98 +1,104 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
+import { useGame } from '../contexts/GameContext';
 import { 
-  Trophy, 
-  Clock, 
-  MessageCircle, 
-  Users, 
+  Pause, 
+  Play, 
+  RotateCcw, 
+  Settings, 
+  Zap, 
   Crown, 
-  DollarSign, 
-  Sparkles, 
-  X,
-  Home,
-  Volume2,
-  VolumeX,
-  Pause,
-  Play,
-  Target
+  Star, 
+  Target,
+  Timer,
+  Trophy,
+  Users,
+  Award,
+  Sparkles,
+  Power,
+  Clock,
+  MagicWand,
+  TrendingUp,
+  Gem
 } from 'lucide-react';
-import { useGame } from '@/contexts/GameContext';
-import { useAuth } from '@/contexts/AuthContext';
-import { BingoCard as BingoCardType } from '@/types';
-import AnimatedBingoCard from './AnimatedBingoCard';
-import ChatSystem from './ChatSystem';
-import AnimatedConfetti from './AnimatedConfetti';
-import AnimatedPowerUpsBar from './AnimatedPowerUpsBar';
-import AnimatedWinPatternsDisplay from './AnimatedWinPatternsDisplay';
-import AnimatedCurrentNumber from './AnimatedCurrentNumber';
-import AnimatedCalledNumbers from './AnimatedCalledNumbers';
-import AnimatedMoneyDisplay from './AnimatedMoneyDisplay';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Button } from './ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Badge } from './ui/badge';
+import { Progress } from './ui/progress';
 
-interface GameScreenProps {
-  onExitGame: () => void;
-}
+const GameScreen: React.FC = () => {
+  const { 
+    gameState, 
+    startMatch, 
+    endMatch, 
+    callNumber, 
+    pauseGame, 
+    resumeGame, 
+    resetGame 
+  } = useGame();
+  
+  const [selectedTab, setSelectedTab] = useState<'bingo' | 'powerups' | 'tips'>('bingo');
+  const [showPowerUpInfo, setShowPowerUpInfo] = useState(false);
+  const [showTips, setShowTips] = useState(false);
 
-const GameScreen: React.FC<GameScreenProps> = ({ onExitGame }) => {
-  const { gameState, dispatch, endMatch } = useGame();
-  const { currentMatch, playerCard, opponentCard } = gameState;
-  const { user } = useAuth();
-  const [chatOpen, setChatOpen] = useState(false);
-  const [showConfetti, setShowConfetti] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(30);
-  const [soundEnabled, setSoundEnabled] = useState(true);
-  const [gamePaused, setGamePaused] = useState(false);
-  const [showExitConfirm, setShowExitConfirm] = useState(false);
-  const [powerUps, setPowerUps] = useState({
-    timeFreeze: 2,
-    autoMark: 1,
-    doublePoints: 1,
-    luckyNumber: 1,
-    shield: 1,
-    bomb: 1
-  });
-  const [currentNumber, setCurrentNumber] = useState<number | null>(null);
-  const [calledNumbers, setCalledNumbers] = useState<Array<{letter: string, number: number, timestamp: number}>>([]);
-  const [unreadMessages, setUnreadMessages] = useState(0);
-
-  // Mock current game data
-  const currentGame = {
-    entryFee: currentMatch?.entryFee || 1.00,
-    prizePool: 425.75,
-    jackpot: 2150.25,
-    playersCount: 62,
-    maxPlayers: 80,
-    roomName: 'Quick Cash',
-    gameNumber: '#BG-4721',
-    pattern: 'Full House',
-    ballsLeft: 75 - calledNumbers.length
-  };
-
-  const exitGame = () => {
-    if (gameState.gameStatus === 'playing') {
-      setShowExitConfirm(true);
-    } else {
-      onExitGame();
+  const powerUps = [
+    {
+      id: 'magic-ball',
+      name: 'Magic Ball',
+      description: 'Choose a ball which you can daub absolutely',
+      icon: MagicWand,
+      color: 'teal',
+      cost: 100,
+      available: 2
+    },
+    {
+      id: 'magic-dauber',
+      name: 'Magic Dauber',
+      description: 'Daub any square in any card',
+      icon: Target,
+      color: 'purple',
+      cost: 150,
+      available: 1
+    },
+    {
+      id: 'triple-time',
+      name: 'Triple Time',
+      description: 'Score earned from daubing will be tripled in a period of time',
+      icon: Zap,
+      color: 'orange',
+      cost: 200,
+      available: 1
+    },
+    {
+      id: 'extra-time',
+      name: 'Extra Time',
+      description: 'Get extra time bonus',
+      icon: Clock,
+      color: 'blue',
+      cost: 120,
+      available: 3
     }
-  };
+  ];
 
-  const confirmExit = () => {
-    endMatch('timeout');
-    setShowExitConfirm(false);
-    onExitGame();
-  };
-
-  const usePowerUp = (powerUpType: string) => {
-    if (powerUps[powerUpType as keyof typeof powerUps] > 0) {
-      setPowerUps(prev => ({
-        ...prev,
-        [powerUpType]: prev[powerUpType as keyof typeof powerUps] - 1
-      }));
+  const tips = [
+    {
+      title: 'Scoring',
+      content: [
+        'Daub score: 0~200',
+        'Bingo score: 0~5000',
+        'Penalty: -100~-200'
+      ],
+      tip: 'Reach bingo as earlier as you can to get more points!'
+    },
+    {
+      title: 'Asynchronous Games',
+      content: [
+        'This is an asynchronous game',
+        'Players may start at different times',
+        'Higher score wins when both finish',
+        'Time limit: 10 minutes'
+      ]
     }
-  };
+  ];
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -100,559 +106,361 @@ const GameScreen: React.FC<GameScreenProps> = ({ onExitGame }) => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Simulate receiving new messages (for demo purposes)
-  useEffect(() => {
-    const interval = setInterval(() => {
-      // Randomly add unread messages every 30 seconds (for demo)
-      if (Math.random() < 0.3 && !chatOpen) { // 30% chance every 30 seconds
-        setUnreadMessages(prev => prev + 1);
-      }
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, [chatOpen]);
-
-  const convertToBingoCard = (cardNumbers: number[][]): BingoCardType => {
-    return {
-      id: 'player-card',
-      numbers: cardNumbers.map(row => 
-        row.map(num => num === 0 ? null : num)
-      ) as (number | null)[][],
-      marked: cardNumbers.map(row => 
-        row.map(() => false)
-      )
-    };
+  const handlePowerUpUse = (powerUpId: string) => {
+    console.log(`Using power-up: ${powerUpId}`);
+    // Power-up logic would go here
   };
 
-  useEffect(() => {
-    if (gameState.gameStatus === 'won') {
-      setShowConfetti(true);
-      setTimeout(() => setShowConfetti(false), 5000);
-    }
-  }, [gameState.gameStatus]);
+  if (!gameState.currentMatch) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+        <Card className="glass-card border-blue-500/30">
+          <CardContent className="p-8 text-center">
+            <Trophy className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
+            <h2 className="text-white text-2xl font-bold mb-4">No Active Game</h2>
+            <p className="text-gray-300 mb-6">Start a new game from the home screen</p>
+            <Button 
+              onClick={() => startMatch(true, 0)}
+              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold px-8 py-3 rounded-lg"
+            >
+              Start Practice Game
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
-    <>
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 relative overflow-hidden">
-        {/* Animated background effects */}
-        <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 via-blue-600/10 to-purple-600/10 blur-3xl"></div>
-          <div className="absolute top-0 left-0 w-full h-full">
-            {/* Animated particles */}
-            {[...Array(20)].map((_, i) => (
-              <motion.div
-                key={i}
-                className="absolute w-2 h-2 bg-purple-400/30 rounded-full"
-                style={{
-                  left: `${Math.random() * 100}%`,
-                  top: `${Math.random() * 100}%`,
-                }}
-                animate={{
-                  y: [0, -20, 0],
-                  opacity: [0.3, 1, 0.3],
-                  scale: [1, 1.2, 1]
-                }}
-                transition={{
-                  duration: 3 + Math.random() * 2,
-                  repeat: Infinity,
-                  delay: Math.random() * 2
-                }}
-              />
-            ))}
-          </div>
-        </div>
-
-        <div className="relative z-10 p-4 space-y-4">
-          {/* Practice Mode Indicator */}
-          {gameState.currentMatch && gameState.currentMatch.entryFee === 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-gradient-to-r from-green-600/30 to-emerald-600/30 border-2 border-green-400/40 rounded-2xl p-4 backdrop-blur-md text-center"
-            >
-              <div className="flex flex-col items-center space-y-4">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-green-500/30 rounded-lg">
-                    <Target className="w-6 h-6 text-green-400" />
-                  </div>
-                  <div>
-                    <h3 className="text-green-300 text-xl font-bold">🎯 PRACTICE MODE</h3>
-                    <p className="text-green-200 text-sm">No real money at stake - perfect for learning!</p>
-                  </div>
-                </div>
-                
-                {/* Start Game Button for Practice Mode */}
-                {gameState.gameStatus === 'waiting' && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.3 }}
-                  >
-                    <Button
-                      onClick={() => {
-                        dispatch({ type: 'START_GAME' });
-                        // Manually start calling numbers if the game isn't starting
-                        if (gameState.gameStatus === 'waiting') {
-                          const interval = setInterval(() => {
-                            if (gameState.gameStatus !== 'playing') {
-                              clearInterval(interval);
-                              return;
-                            }
-                            
-                            const availableNumbers = Array.from({ length: 75 }, (_, i) => i + 1)
-                              .filter(num => !gameState.calledNumbers.includes(num));
-                            
-                            if (availableNumbers.length === 0) {
-                              clearInterval(interval);
-                              return;
-                            }
-                            
-                            const randomNumber = availableNumbers[Math.floor(Math.random() * availableNumbers.length)];
-                            
-                            dispatch({
-                              type: 'CALL_NUMBER',
-                              payload: { number: randomNumber },
-                            });
-                          }, 3000);
-                        }
-                      }}
-                      className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold px-8 py-3 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-200"
-                    >
-                      <Play className="w-5 h-5 mr-2" />
-                      Start Practice Game
-                    </Button>
-                  </motion.div>
-                )}
-                
-                {/* Game Status for Practice Mode */}
-                {gameState.gameStatus === 'playing' && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-green-500/20 border border-green-400/30 rounded-lg px-4 py-2"
-                  >
-                    <p className="text-green-300 text-sm font-medium">🎮 Game in Progress!</p>
-                  </motion.div>
-                )}
-              </div>
-            </motion.div>
-          )}
-
-          {/* Top Game Info Bar */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-gradient-to-r from-purple-900/60 via-blue-900/60 to-purple-900/60 backdrop-blur-xl border border-purple-400/30 rounded-2xl p-4 shadow-2xl"
-          >
-            <div className="flex items-center justify-between">
-              {/* Left: Game Info */}
-              <div className="flex items-center space-x-4">
-                <button
-                  onClick={exitGame}
-                  className="p-2 bg-red-500/20 border border-red-400/30 rounded-lg text-red-400 hover:bg-red-500/30 transition-all"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-                
-                <div>
-                  <h2 className="text-white font-black text-lg">{currentGame.roomName}</h2>
-                  <p className="text-purple-300 text-sm">{currentGame.gameNumber}</p>
-                </div>
-
-                <div className="hidden sm:flex items-center space-x-4 text-sm">
-                  <div className="bg-green-500/20 border border-green-400/30 rounded-lg px-3 py-1">
-                    <span className="text-green-300 font-bold">${currentGame.prizePool.toFixed(2)}</span>
-                    <p className="text-green-400 text-xs">Prize Pool</p>
-                  </div>
-                  
-                  <div className="bg-yellow-500/20 border border-yellow-400/30 rounded-lg px-3 py-1">
-                    <span className="text-yellow-300 font-bold">${currentGame.jackpot.toFixed(2)}</span>
-                    <p className="text-yellow-400 text-xs">Jackpot</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right: Controls */}
-              <div className="flex items-center space-x-3">
-                {/* Player Count */}
-                <div className="bg-blue-500/20 border border-blue-400/30 rounded-lg px-3 py-1 text-center">
-                  <div className="text-blue-300 font-bold">{currentGame.playersCount}/{currentGame.maxPlayers}</div>
-                  <p className="text-blue-400 text-xs">Players</p>
-                </div>
-
-                {/* Sound Toggle */}
-                <button
-                  onClick={() => setSoundEnabled(!soundEnabled)}
-                  className={`p-2 rounded-lg transition-all ${
-                    soundEnabled 
-                      ? 'bg-green-500/20 border border-green-400/30 text-green-400' 
-                      : 'bg-red-500/20 border border-red-400/30 text-red-400'
-                  }`}
-                >
-                  {soundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
-                </button>
-
-                {/* Chat Toggle */}
-                <button
-                  onClick={() => {
-                    setChatOpen(!chatOpen);
-                    if (!chatOpen && unreadMessages > 0) {
-                      setUnreadMessages(0); // Clear unread count when opening chat
-                    }
-                  }}
-                  className="p-2 bg-purple-500/20 border border-purple-400/30 rounded-lg text-purple-400 hover:bg-purple-500/30 transition-all relative"
-                >
-                  <MessageCircle className="w-5 h-5" />
-                  {/* Show red dot or badge for unread messages */}
-                  {unreadMessages > 0 && (
-                    unreadMessages === 1 ? (
-                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
-                    ) : (
-                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-xs text-white font-bold">
-                        {unreadMessages > 9 ? '9+' : unreadMessages}
-                      </div>
-                    )
-                  )}
-                </button>
-              </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      {/* Top Game Bar */}
+      <div className="sticky top-0 z-40 bg-black/20 backdrop-blur-lg border-b border-white/10">
+        <div className="flex items-center justify-between px-4 py-3">
+          {/* Left - Timer */}
+          <div className="flex items-center space-x-3">
+            <div className="w-16 h-8 bg-blue-500/20 rounded-full flex items-center justify-center border border-blue-500/30">
+              <Timer className="w-4 h-4 text-blue-400 mr-1" />
+              <span className="text-white font-mono text-sm">
+                {formatTime(gameState.timeRemaining || 60)}
+              </span>
             </div>
-          </motion.div>
-
-          {/* Game Status Bar */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-gradient-to-r from-orange-500/20 to-red-500/20 border-2 border-orange-400/40 rounded-2xl p-4 backdrop-blur-md"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="bg-orange-500/30 rounded-xl p-3">
-                  <Trophy className="w-6 h-6 text-orange-400" />
-                </div>
-                <div>
-                  <h3 className="text-orange-300 font-bold text-lg">Win Pattern: {currentGame.pattern}</h3>
-                  <p className="text-orange-400 text-sm">Get a full house to win the round!</p>
-                  
-                  {/* Game Mode Info */}
-                  {gameState.currentMatch && (
-                    <div className="mt-2 text-xs">
-                      {gameState.currentMatch.entryFee === 0 ? (
-                        <span className="text-green-400 font-semibold">🎯 Practice Mode - No Entry Fee</span>
-                      ) : (
-                        <span className="text-yellow-400 font-semibold">
-                          💰 Entry Fee: ${gameState.currentMatch.entryFee.toFixed(2)} | 
-                          Prize Pool: ${gameState.currentMatch.prizePool.toFixed(2)}
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-              
-              <div className="text-right">
-                <div className="text-orange-300 text-2xl font-black">
-                  {currentGame.ballsLeft}
-                </div>
-                <p className="text-orange-400 text-sm">Balls Left</p>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Current Number Display */}
-          <AnimatedCurrentNumber number={currentNumber} />
-
-          {/* Main Game Area */}
-          <div className="grid lg:grid-cols-2 gap-4">
-            {/* Your Card */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
-              className="space-y-4"
-            >
-              <div className="bg-gradient-to-r from-green-600/30 to-emerald-600/30 border-2 border-green-400/40 rounded-2xl p-4 backdrop-blur-md">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="bg-green-500/30 rounded-xl p-2">
-                      <Crown className="w-5 h-5 text-green-400" />
-                    </div>
-                    <div>
-                      <h3 className="text-green-300 font-bold text-lg">Your Card</h3>
-                      <p className="text-green-400 text-sm">Entry: ${currentGame.entryFee.toFixed(2)}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-green-300 text-xl font-black">
-                      {user.gamesWon}
-                    </div>
-                    <p className="text-green-400 text-xs">Wins</p>
-                  </div>
-                </div>
-
-                {playerCard ? (
-                  <AnimatedBingoCard 
-                    card={convertToBingoCard(playerCard)} 
-                  />
-                ) : (
-                  <div className="bg-green-500/10 border border-green-400/20 rounded-xl p-8 text-center">
-                    <p className="text-green-400">Loading your card...</p>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-
-            {/* Opponent Card */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4 }}
-              className="space-y-4"
-            >
-              <div className="bg-gradient-to-r from-red-600/30 to-pink-600/30 border-2 border-red-400/40 rounded-2xl p-4 backdrop-blur-md">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="bg-red-500/30 rounded-xl p-2">
-                      <Users className="w-5 h-5 text-red-400" />
-                    </div>
-                    <div>
-                      <h3 className="text-red-300 font-bold text-lg">Top Player</h3>
-                      <p className="text-red-400 text-sm">Leading the game</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-red-300 text-xl font-black">
-                      1st
-                    </div>
-                    <p className="text-red-400 text-xs">Position</p>
-                  </div>
-                </div>
-
-                {opponentCard ? (
-                  <AnimatedBingoCard 
-                    card={convertToBingoCard(opponentCard)} 
-                  />
-                ) : (
-                  <div className="bg-red-500/10 border border-red-400/20 rounded-xl p-8 text-center">
-                    <p className="text-red-400">Loading opponent card...</p>
-                  </div>
-                )}
-              </div>
-            </motion.div>
           </div>
 
-          {/* Called Numbers */}
-          <AnimatedCalledNumbers calledNumbers={calledNumbers} />
-
-          {/* Power-ups */}
-          <AnimatedPowerUpsBar 
-            powerUps={powerUps}
-            onUsePowerUp={usePowerUp}
-          />
-
-          {/* Balance Display */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="bg-gradient-to-r from-blue-600/20 to-cyan-600/20 border-2 border-blue-400/40 rounded-2xl p-4 backdrop-blur-md"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="bg-blue-500/30 rounded-xl p-3">
-                  <DollarSign className="w-6 h-6 text-blue-400" />
-                </div>
-                <div>
-                  <h3 className="text-blue-300 font-bold text-lg">Your Balance</h3>
-                  <p className="text-blue-400 text-sm">Current funds available</p>
-                </div>
+          {/* Center - Score */}
+          <div className="flex items-center space-x-3">
+            <div className="text-center">
+              <div className="text-yellow-400 font-bold text-2xl">
+                {gameState.score || 0}
               </div>
-              
-              <div className="text-right">
-                <div className="text-blue-300 text-2xl font-black">
-                  ${user.balance.toFixed(2)}
-                </div>
-                <p className="text-blue-400 text-sm">Available</p>
-                
-                {/* Show entry fee if applicable */}
-                {gameState.currentMatch && gameState.currentMatch.entryFee > 0 && (
-                  <div className="mt-1">
-                    <div className="text-red-400 text-lg font-bold">
-                      -${gameState.currentMatch.entryFee.toFixed(2)}
-                    </div>
-                    <p className="text-red-400 text-xs">Entry Fee</p>
-                  </div>
-                )}
-              </div>
+              <div className="text-gray-400 text-xs">Score</div>
             </div>
-          </motion.div>
+            {gameState.bonusScore > 0 && (
+              <div className="text-center">
+                <div className="text-green-400 font-bold text-lg">
+                  +{gameState.bonusScore}
+                </div>
+                <div className="text-gray-400 text-xs">Bonus</div>
+              </div>
+            )}
+          </div>
+
+          {/* Right - Controls */}
+          <div className="flex items-center space-x-2">
+            {gameState.isPaused ? (
+              <Button
+                onClick={resumeGame}
+                size="sm"
+                className="bg-green-500 hover:bg-green-600 text-white"
+              >
+                <Play className="w-4 h-4" />
+              </Button>
+            ) : (
+              <Button
+                onClick={pauseGame}
+                size="sm"
+                className="bg-blue-500 hover:bg-blue-600 text-white"
+              >
+                <Pause className="w-4 h-4" />
+              </Button>
+            )}
+            <Button
+              onClick={resetGame}
+              size="sm"
+              variant="outline"
+              className="border-white/20 text-white hover:bg-white/10"
+            >
+              <RotateCcw className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
-
-        {/* Chat System */}
-        <AnimatePresence>
-          {chatOpen && (
-            <motion.div
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className="fixed top-0 right-0 w-80 h-full bg-purple-900/95 backdrop-blur-xl border-l border-purple-400/30 z-50"
-            >
-              <ChatSystem isOpen={chatOpen} onClose={() => setChatOpen(false)} />
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Confetti */}
-        {showConfetti && <AnimatedConfetti isActive={showConfetti} />}
-
-        {/* Game Completion Modal */}
-        <AnimatePresence>
-          {gameState.gameStatus === 'won' && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            >
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.8, opacity: 0 }}
-                className="bg-gradient-to-br from-green-800/90 via-emerald-800/90 to-green-800/90 backdrop-blur-xl border border-green-400/30 rounded-2xl p-8 max-w-md w-full text-center"
-              >
-                <div className="text-6xl mb-4">🎉</div>
-                <h3 className="text-white text-2xl font-bold mb-4">Congratulations!</h3>
-                <p className="text-green-200 text-lg mb-6">You won the game!</p>
-                
-                {gameState.currentMatch && gameState.currentMatch.entryFee === 0 ? (
-                  <div className="bg-green-600/30 rounded-xl p-4 mb-6">
-                    <p className="text-green-300 font-semibold">🎯 Practice Mode</p>
-                    <p className="text-green-200 text-sm">Great job! This was a practice game.</p>
-                  </div>
-                ) : (
-                  <div className="bg-yellow-600/30 rounded-xl p-4 mb-6">
-                    <p className="text-yellow-300 font-semibold">💰 Real Money Win!</p>
-                    <p className="text-yellow-200 text-sm">
-                      Prize: ${gameState.currentMatch?.prizePool.toFixed(2)}
-                    </p>
-                  </div>
-                )}
-                
-                <div className="flex space-x-3">
-                  <button
-                    onClick={() => window.location.reload()}
-                    className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-3 px-4 rounded-xl transition-all"
-                  >
-                    Play Again
-                  </button>
-                  <button
-                    onClick={onExitGame}
-                    className="flex-1 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-bold py-3 px-4 rounded-xl transition-all"
-                  >
-                    Back to Lobby
-                  </button>
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-
-          {gameState.gameStatus === 'lost' && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            >
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.8, opacity: 0 }}
-                className="bg-gradient-to-br from-red-800/90 via-pink-800/90 to-red-800/90 backdrop-blur-xl border border-red-400/30 rounded-2xl p-8 max-w-md w-full text-center"
-              >
-                <div className="text-6xl mb-4">😔</div>
-                <h3 className="text-white text-2xl font-bold mb-4">Game Over</h3>
-                <p className="text-red-200 text-lg mb-6">Better luck next time!</p>
-                
-                {gameState.currentMatch && gameState.currentMatch.entryFee === 0 ? (
-                  <div className="bg-red-600/30 rounded-xl p-4 mb-6">
-                    <p className="text-red-300 font-semibold">🎯 Practice Mode</p>
-                    <p className="text-red-200 text-sm">No money lost - keep practicing!</p>
-                  </div>
-                ) : (
-                  <div className="bg-red-600/30 rounded-xl p-4 mb-6">
-                    <p className="text-red-300 font-semibold">💰 Entry Fee Lost</p>
-                    <p className="text-red-200 text-sm">
-                      Entry fee: ${gameState.currentMatch?.entryFee.toFixed(2)}
-                    </p>
-                  </div>
-                )}
-                
-                <div className="flex space-x-3">
-                  <button
-                    onClick={() => window.location.reload()}
-                    className="flex-1 bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white font-bold py-3 px-4 rounded-xl transition-all"
-                  >
-                    Try Again
-                  </button>
-                  <button
-                    onClick={onExitGame}
-                    className="flex-1 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-bold py-3 px-4 rounded-xl transition-all"
-                  >
-                    Back to Lobby
-                  </button>
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
 
-      {/* Exit Confirmation Modal */}
-      <AnimatePresence>
-        {showExitConfirm && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          >
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              className="bg-gradient-to-br from-purple-800/90 via-blue-800/90 to-purple-800/90 backdrop-blur-xl border border-purple-400/30 rounded-2xl p-6 max-w-md w-full"
+      {/* Navigation Tabs */}
+      <div className="px-4 py-3">
+        <div className="flex space-x-1 bg-white/10 rounded-lg p-1">
+          {[
+            { id: 'bingo', label: 'Bingo', icon: Target },
+            { id: 'powerups', label: 'Power-ups', icon: Zap },
+            { id: 'tips', label: 'Tips', icon: Award }
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setSelectedTab(tab.id as any)}
+              className={`flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-md transition-all duration-200 ${
+                selectedTab === tab.id
+                  ? 'bg-blue-500 text-white shadow-lg'
+                  : 'text-gray-300 hover:text-white hover:bg-white/10'
+              }`}
             >
-              <div className="text-center">
-                <div className="bg-red-500/20 rounded-full p-4 w-16 h-16 mx-auto mb-4">
-                  <X className="w-8 h-8 text-red-400 mx-auto" />
+              <tab.icon className="w-4 h-4" />
+              <span className="text-sm font-medium">{tab.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="px-4 pb-6 space-y-6">
+        {/* Called Numbers */}
+        <Card className="glass-card border-yellow-500/30">
+          <CardHeader>
+            <CardTitle className="text-yellow-400 text-lg flex items-center">
+              <Star className="w-5 h-5 mr-2" />
+              Called Numbers
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              {gameState.calledNumbers.map((number, index) => {
+                const letter = number <= 15 ? 'B' : number <= 30 ? 'I' : number <= 45 ? 'N' : number <= 60 ? 'G' : 'O';
+                const colors = {
+                  'B': 'bg-red-500',
+                  'I': 'bg-yellow-500',
+                  'N': 'bg-green-500',
+                  'G': 'bg-blue-500',
+                  'O': 'bg-purple-500'
+                };
+                return (
+                  <div
+                    key={index}
+                    className={`relative w-12 h-12 ${colors[letter]} rounded-full flex flex-col items-center justify-center text-white font-bold shadow-lg`}
+                  >
+                    <div className="text-xs">{letter}</div>
+                    <div className="text-sm">{number}</div>
+                  </div>
+                );
+              })}
+              {gameState.calledNumbers.length === 0 && (
+                <div className="text-gray-400 text-center w-full py-4">
+                  No numbers called yet
                 </div>
-                
-                <h3 className="text-white text-xl font-bold mb-2">Exit Game?</h3>
-                <p className="text-purple-300 mb-6">
-                  You're currently in a live game. Exiting will forfeit your entry fee of ${currentGame.entryFee.toFixed(2)}.
-                </p>
-                
-                <div className="flex space-x-3">
-                  <button
-                    onClick={() => setShowExitConfirm(false)}
-                    className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-3 px-4 rounded-xl transition-all"
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Bingo Card */}
+        {selectedTab === 'bingo' && (
+          <Card className="glass-card border-blue-500/30">
+            <CardHeader>
+              <CardTitle className="text-blue-400 text-lg flex items-center">
+                <Target className="w-5 h-5 mr-2" />
+                Your Bingo Card
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {gameState.playerCard ? (
+                <div className="space-y-2">
+                  {/* BINGO Header */}
+                  <div className="grid grid-cols-5 gap-1 mb-2">
+                    {['B', 'I', 'N', 'G', 'O'].map((letter, index) => (
+                      <div
+                        key={letter}
+                        className={`h-8 rounded-lg flex items-center justify-center font-bold text-white ${
+                          index === 0 ? 'bg-red-500' :
+                          index === 1 ? 'bg-yellow-500' :
+                          index === 2 ? 'bg-green-500' :
+                          index === 3 ? 'bg-blue-500' : 'bg-purple-500'
+                        }`}
+                      >
+                        {letter}
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* Numbers Grid */}
+                  <div className="grid grid-cols-5 gap-1">
+                    {gameState.playerCard.map((row, rowIndex) =>
+                      row.map((number, colIndex) => {
+                        const isCalled = gameState.calledNumbers.includes(number);
+                        const isFreeSpace = rowIndex === 2 && colIndex === 2;
+                        
+                        return (
+                          <div
+                            key={`${rowIndex}-${colIndex}`}
+                            className={`aspect-square rounded-lg flex items-center justify-center font-bold text-sm transition-all duration-200 ${
+                              isFreeSpace
+                                ? 'bg-yellow-500 text-yellow-900'
+                                : isCalled
+                                ? 'bg-blue-500 text-white'
+                                : 'bg-white/10 text-white border border-white/20'
+                            }`}
+                          >
+                            {isFreeSpace ? (
+                              <Sparkles className="w-5 h-5" />
+                            ) : (
+                              number
+                            )}
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Target className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-400">No bingo card available</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Power-ups */}
+        {selectedTab === 'powerups' && (
+          <Card className="glass-card border-purple-500/30">
+            <CardHeader>
+              <CardTitle className="text-purple-400 text-lg flex items-center">
+                <Zap className="w-5 h-5 mr-2" />
+                Power-ups
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-3">
+                {powerUps.map((powerUp) => (
+                  <div
+                    key={powerUp.id}
+                    className="p-3 bg-white/5 rounded-lg border border-white/10 hover:border-white/20 transition-all duration-200"
                   >
-                    Stay & Play
-                  </button>
-                  <button
-                    onClick={confirmExit}
-                    className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold py-3 px-4 rounded-xl transition-all"
-                  >
-                    Exit Game
-                  </button>
+                    <div className="flex items-center space-x-2 mb-2">
+                      <div className={`w-8 h-8 bg-${powerUp.color}-500/20 rounded-full flex items-center justify-center`}>
+                        <powerUp.icon className={`w-4 h-4 text-${powerUp.color}-400`} />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="text-white font-semibold text-sm">{powerUp.name}</h4>
+                        <p className="text-gray-400 text-xs">{powerUp.description}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-1">
+                        <Gem className="w-3 h-3 text-blue-400" />
+                        <span className="text-blue-400 text-xs">{powerUp.cost}</span>
+                      </div>
+                      <Badge className="bg-green-500 text-white text-xs">
+                        {powerUp.available} available
+                      </Badge>
+                    </div>
+                    <Button
+                      onClick={() => handlePowerUpUse(powerUp.id)}
+                      size="sm"
+                      className="w-full mt-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white text-xs"
+                    >
+                      Use Power-up
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Tips */}
+        {selectedTab === 'tips' && (
+          <Card className="glass-card border-green-500/30">
+            <CardHeader>
+              <CardTitle className="text-green-400 text-lg flex items-center">
+                <Award className="w-5 h-5 mr-2" />
+                Game Tips
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {tips.map((tip, index) => (
+                  <div key={index} className="p-3 bg-white/5 rounded-lg border border-white/10">
+                    <h4 className="text-white font-semibold mb-2">{tip.title}</h4>
+                    <ul className="space-y-1 mb-2">
+                      {tip.content.map((item, itemIndex) => (
+                        <li key={itemIndex} className="text-gray-300 text-sm flex items-start space-x-2">
+                          <span className="text-green-400 mt-1">•</span>
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    {tip.tip && (
+                      <div className="p-2 bg-yellow-500/20 rounded border border-yellow-500/30">
+                        <p className="text-yellow-300 text-sm">{tip.tip}</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Game Progress */}
+        <Card className="glass-card border-green-500/30">
+          <CardHeader>
+            <CardTitle className="text-green-400 text-lg flex items-center">
+              <TrendingUp className="w-5 h-5 mr-2" />
+              Game Progress
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-300">Numbers Called:</span>
+                <span className="text-white font-bold">{gameState.calledNumbers.length}/75</span>
+              </div>
+              <Progress 
+                value={(gameState.calledNumbers.length / 75) * 100} 
+                className="h-2 bg-gray-700"
+              />
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center p-3 bg-white/5 rounded-lg">
+                  <div className="text-white font-bold text-lg">{gameState.score || 0}</div>
+                  <div className="text-gray-400 text-xs">Current Score</div>
+                </div>
+                <div className="text-center p-3 bg-white/5 rounded-lg">
+                  <div className="text-white font-bold text-lg">{gameState.bonusScore || 0}</div>
+                  <div className="text-gray-400 text-xs">Bonus Score</div>
                 </div>
               </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Game Actions */}
+        <div className="flex space-x-3">
+          <Button
+            onClick={() => callNumber()}
+            className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-3 rounded-lg"
+          >
+            <Star className="w-4 h-4 mr-2" />
+            Call Number
+          </Button>
+          <Button
+            onClick={() => endMatch('player')}
+            className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-3 rounded-lg"
+          >
+            <Trophy className="w-4 h-4 mr-2" />
+            Claim Bingo
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 };
 

@@ -16,9 +16,7 @@ import {
   Sparkles,
   Power,
   Clock,
-  MagicWand,
-  TrendingUp,
-  Gem
+  Wand2
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -45,7 +43,7 @@ const GameScreen: React.FC = () => {
       id: 'magic-ball',
       name: 'Magic Ball',
       description: 'Choose a ball which you can daub absolutely',
-      icon: MagicWand,
+      icon: Wand2,
       color: 'teal',
       cost: 100,
       available: 2

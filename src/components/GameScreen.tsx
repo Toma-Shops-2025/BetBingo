@@ -16,7 +16,8 @@ import {
   Sparkles,
   Power,
   Clock,
-  Wand2
+  Wand2,
+  BarChart3
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -411,7 +412,7 @@ const GameScreen: React.FC = () => {
         <Card className="glass-card border-green-500/30">
           <CardHeader>
             <CardTitle className="text-green-400 text-lg flex items-center">
-              <TrendingUp className="w-5 h-5 mr-2" />
+              <BarChart3 className="w-5 h-5 mr-2" />
               Game Progress
             </CardTitle>
           </CardHeader>

@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Clock, Target, TrendingUp, Sparkles, Star, Zap } from 'lucide-react';
+import { Clock, Target, BarChart3, Sparkles, Star, Zap } from 'lucide-react';
 
 interface PowerUp {
   id: string;
@@ -41,7 +41,7 @@ const AnimatedPowerUpsBar: React.FC<AnimatedPowerUpsBarProps> = ({ powerUps, onU
     {
       id: 'doublePoints',
       name: 'Double',
-      icon: TrendingUp,
+      icon: BarChart3,
       color: 'text-purple-300',
       description: 'Double points for next win',
       gradient: 'from-purple-500 via-pink-400 to-purple-600',

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Clock, Target, TrendingUp, Sparkles, Star, Zap } from 'lucide-react';
+import { Clock, Target, BarChart3, Sparkles, Star, Zap } from 'lucide-react';
 
 interface PowerUp {
   id: string;
@@ -34,7 +34,7 @@ const PowerUpsBar: React.FC<PowerUpsBarProps> = ({ powerUps, onUsePowerUp }) => 
     {
       id: 'doublePoints',
       name: 'Double',
-      icon: TrendingUp,
+      icon: BarChart3,
       color: 'border-purple-400 text-purple-400',
       description: 'Double points for next win'
     },

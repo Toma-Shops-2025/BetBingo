@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, Crown, Star, DollarSign, TrendingUp } from 'lucide-react';
+import { Trophy, Crown, Star, DollarSign, BarChart3 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 interface LeaderboardPlayer {
@@ -52,7 +52,7 @@ const AnimatedLeaderboard: React.FC<AnimatedLeaderboardProps> = ({
           color: 'from-blue-400 to-purple-400',
           bgColor: 'from-blue-500/20 to-purple-500/20',
           borderColor: 'border-blue-400/50',
-          icon: TrendingUp,
+          icon: BarChart3,
           glow: 'shadow-blue-400/30'
         };
     }

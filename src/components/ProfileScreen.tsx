@@ -8,14 +8,14 @@ import {
   Calendar, 
   Crown, 
   Target, 
-  TrendingUp,
   Edit3,
   Camera,
   Award,
   Zap,
   Shield,
   Settings,
-  X
+  X,
+  BarChart3
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 

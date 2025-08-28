@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Crown, Shield, TrendingUp, Gift, Star, Lock, Check, ArrowRight } from 'lucide-react';
+import { Crown, Shield, BarChart3, Gift, Star, Lock, Check, ArrowRight } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Progress } from './ui/progress';
@@ -240,7 +240,7 @@ const VIPCenter: React.FC<VIPCenterProps> = ({ isOpen, onClose }) => {
             <Card className="glass-card border-green-500/30">
               <CardHeader>
                 <CardTitle className="text-green-400 text-lg flex items-center">
-                  <TrendingUp className="w-5 h-5 mr-2" />
+                  <BarChart3 className="w-5 h-5 mr-2" />
                   Your Privileges
                 </CardTitle>
               </CardHeader>
@@ -248,7 +248,7 @@ const VIPCenter: React.FC<VIPCenterProps> = ({ isOpen, onClose }) => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="text-center p-4 bg-green-500/10 rounded-lg">
                     <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <TrendingUp className="w-6 h-6 text-green-400" />
+                      <BarChart3 className="w-6 h-6 text-green-400" />
                     </div>
                     <h4 className="text-white font-semibold mb-1">Withdraw Rebate</h4>
                     <p className="text-gray-300 text-sm">Get cashback on withdrawals</p>

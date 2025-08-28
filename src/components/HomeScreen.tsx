@@ -13,7 +13,7 @@ import {
   Play, 
   Plus,
   Wallet,
-  TrendingUp,
+  BarChart3,
   Award,
   Zap,
   Target,

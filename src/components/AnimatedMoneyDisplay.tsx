@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { DollarSign, TrendingUp, Gift, Coins } from 'lucide-react';
+import { DollarSign, BarChart3, Gift, Coins } from 'lucide-react';
 
 interface AnimatedMoneyDisplayProps {
   amount: number;

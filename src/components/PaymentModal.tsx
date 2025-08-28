@@ -12,7 +12,7 @@ import {
   Lock,
   Shield,
   Zap,
-  TrendingUp
+  BarChart3
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
